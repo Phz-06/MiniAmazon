@@ -7,8 +7,10 @@ import edu.ece568.MiniAmazon.repository.WareHouseRepository;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import lombok.extern.slf4j.Slf4j;
 
 @Service
+@Slf4j
 public class ProductService {
 
     private final ProductRepository productRepository;
@@ -89,4 +91,59 @@ public class ProductService {
         return productRepository.save(product);
     }
     
+    /**
+     * Increase inventory for a product that arrived from the world simulator
+     * 
+     * @param productId The ID of the product (from world simulator)
+     * @param description The description of the product
+     * @param count The quantity to add
+     * @param warehouseId The ID of the warehouse (from world simulator)
+     */
+    @Transactional
+    public void increaseInventory(long productId, String description, int count, int warehouseId) {
+        log.info("Increasing inventory for product {} by {} in warehouse {}", productId, count, warehouseId);
+        
+        // Convert the world simulator IDs to our database IDs
+        String productStrId = String.valueOf(productId);
+        
+        // Find the warehouse by ID
+        log.info("Looking for warehouse with ID: {}", warehouseId);
+        WareHouse warehouse = wareHouseRepository.findById((long) warehouseId)
+            .orElseGet(() -> {
+                // If warehouse doesn't exist, create it
+                log.info("Warehouse {} not found in database, creating new warehouse", warehouseId);
+                WareHouse newWarehouse = new WareHouse();
+                newWarehouse.setName("Warehouse " + warehouseId);
+                newWarehouse.setXCoordinate(0);
+                newWarehouse.setYCoordinate(0);
+                return wareHouseRepository.save(newWarehouse);
+            });
+        
+        log.info("Using warehouse: ID={}, name={}, coordinates=({},{})", 
+                warehouse.getId(), warehouse.getName(), 
+                warehouse.getXCoordinate(), warehouse.getYCoordinate());
+        
+        // Find or create the product
+        Product product = productRepository.findByProductID(productStrId);
+        if (product == null) {
+            // Create new product if it doesn't exist
+            log.info("Creating new product {} ({})", productStrId, description);
+            product = new Product();
+            product.setProductID(productStrId);
+            product.setName(description);
+            product.setDescription(description);
+            product.setPrice(9.99); // Default price
+            product.setQuantity(count);
+            product.setCategory("General"); // Default category
+            product.setWareHouse(warehouse);
+        } else {
+            // Update existing product
+            log.info("Updating existing product {} from {} to {}", 
+                    productStrId, product.getQuantity(), product.getQuantity() + count);
+            product.setQuantity(product.getQuantity() + count);
+        }
+        
+        // Save the product
+        productRepository.save(product);
+    }
 }

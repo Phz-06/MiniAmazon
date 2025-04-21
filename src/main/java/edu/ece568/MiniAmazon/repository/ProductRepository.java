@@ -9,7 +9,7 @@ public interface ProductRepository extends CrudRepository<Product, Long> {
     Product findByName(String name);
     Product findByProductID(String productID);
     Product findByWareHouse_Name(String wareHouseName);
-    Product findByWareHouse_XCoordinateAndWareHouse_YCoordinate(int x, int y);
+    Product findByWareHouse_xCoordinateAndWareHouse_yCoordinate(int x, int y);
     int findQuantityByProductID(String productID);
 
 }

@@ -8,7 +8,7 @@ import org.springframework.data.jpa.domain.AbstractPersistable;
 @Setter
 @Getter
 @Entity
-public class Package extends AbstractPersistable<Long> {
+public class AmazonPackage extends AbstractPersistable<Long> {
     @Column(unique = true)
     private String trackingNumber;
 

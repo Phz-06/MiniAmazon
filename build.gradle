@@ -2,13 +2,7 @@ plugins {
 	id 'java'
 	id 'org.springframework.boot' version '3.4.4'
 	id 'io.spring.dependency-management' version '1.1.7'
-	id 'com.google.protobuf' version '0.9.2'
-}
-
-protobuf {
-	protoc {
-		artifact = 'com.google.protobuf:protoc:3.21.9'
-	}
+	id 'com.google.protobuf' version '0.9.4'  // Add protobuf plugin
 }
 
 group = 'edu.ece568'
@@ -28,13 +22,30 @@ dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
 	implementation 'org.springframework.boot:spring-boot-starter-web'
 	implementation 'org.springframework.boot:spring-boot-starter-validation'
-	implementation 'com.google.protobuf:protobuf-java:3.24.0'
+
+	// Protocol Buffers
+	implementation 'com.google.protobuf:protobuf-java:3.22.2'
+
 	compileOnly 'org.projectlombok:lombok'
 	annotationProcessor 'org.projectlombok:lombok'
 	developmentOnly 'org.springframework.boot:spring-boot-docker-compose'
 	runtimeOnly 'org.postgresql:postgresql'
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
+
+// Configure protobuf compilation
+protobuf {
+	protoc {
+		artifact = 'com.google.protobuf:protoc:3.22.2'
+	}
+	generateProtoTasks {
+		all().each { task ->
+			task.builtins {
+				java { }
+			}
+		}
+	}
 }
 
 tasks.named('test') {
