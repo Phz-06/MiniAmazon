@@ -96,7 +96,7 @@ public class WorldService {
             warehouseBuilder.setX(10);
             warehouseBuilder.setY(20);
             connectBuilder.addInitwh(warehouseBuilder.build());
-            
+
             // Create the warehouse in our database as well
             WareHouse warehouse = wareHouseRepository.findById(1L).orElseGet(() -> {
                 WareHouse newWarehouse = new WareHouse();

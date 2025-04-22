@@ -4,6 +4,8 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 import org.springframework.data.jpa.domain.AbstractPersistable;
+
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Getter
@@ -11,12 +13,14 @@ import java.util.List;
 @Entity
 @Table(name = "customer_order")
 public class Order extends AbstractPersistable<Long> {
+    private long userId;
+    private LocalDateTime createdAt;
 
-    @OneToMany
+    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL)
     private List<OrderItem> orderItems;
 
-    private int deliveryX;  // delivery x-coordinate
-    private int deliveryY;  // delivery y-coordinate
+    @OneToOne(mappedBy = "order", cascade = CascadeType.ALL)
+    private AmazonPackage amazonPackage;
 
     @Enumerated(EnumType.STRING)
     private Status status;  // e.g., CREATED, PACKING, PACKED, LOADING, LOADED, DELIVERING, DELIVERED

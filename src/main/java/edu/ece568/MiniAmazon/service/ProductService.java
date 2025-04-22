@@ -22,7 +22,16 @@ public class ProductService {
     }
 
     public int getProductCount(String productID) {
-        return productRepository.findQuantityByProductID(productID);
+        return productRepository.findQuantityByProductId(productID);
+    }
+
+    public Product getProductById(String productID) {
+        return productRepository.findByProductId(productID);
+    }
+
+    public Product getProduct(long productId) {
+        return productRepository.findById(productId)
+                .orElseThrow(() -> new IllegalArgumentException("Product with ID " + productId + " not found"));
     }
     
     /**
@@ -44,7 +53,7 @@ public class ProductService {
                                 Long wareHouseId) {
         try {
             // Check if a product with the same ID already exists
-            if (productRepository.findByProductID(productID) != null) {
+            if (productRepository.findByProductId(productID) != null) {
                 throw new IllegalArgumentException("Product with ID " + productID + " already exists");
             }
 
@@ -55,7 +64,7 @@ public class ProductService {
             // Create and populate the product
             Product product = new Product();
             product.setName(name);
-            product.setProductID(productID);
+            product.setProductId(productID);
             product.setPrice(price);
             product.setDescription(description);
             product.setQuantity(quantity);
@@ -79,7 +88,7 @@ public class ProductService {
     @Transactional
     public Product updateProductQuantity(String productID, int quantity) {
         // Find the product
-        Product product = productRepository.findByProductID(productID);
+        Product product = productRepository.findByProductId(productID);
         if (product == null) {
             throw new IllegalArgumentException("Product with ID " + productID + " not found");
         }
@@ -124,12 +133,12 @@ public class ProductService {
                 warehouse.getXCoordinate(), warehouse.getYCoordinate());
         
         // Find or create the product
-        Product product = productRepository.findByProductID(productStrId);
+        Product product = productRepository.findByProductId(productStrId);
         if (product == null) {
             // Create new product if it doesn't exist
             log.info("Creating new product {} ({})", productStrId, description);
             product = new Product();
-            product.setProductID(productStrId);
+            product.setProductId(productStrId);
             product.setName(description);
             product.setDescription(description);
             product.setPrice(9.99); // Default price

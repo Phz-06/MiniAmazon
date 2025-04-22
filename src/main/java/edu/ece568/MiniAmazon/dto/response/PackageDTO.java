@@ -14,7 +14,7 @@ public class PackageDTO {
     public static PackageDTO fromEntity(AmazonPackage pkg) {
         PackageDTO dto = new PackageDTO();
         dto.setId(pkg.getId());
-        dto.setTrackingNumber(pkg.getTrackingNumber());
+        dto.setTrackingNumber(pkg.getShipmentID());
         dto.setStatus(pkg.getStatus());
         
         if (pkg.getOrder() != null) {

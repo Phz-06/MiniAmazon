@@ -10,11 +10,13 @@ import org.springframework.data.jpa.domain.AbstractPersistable;
 @Entity
 public class AmazonPackage extends AbstractPersistable<Long> {
     @Column(unique = true)
-    private String trackingNumber;
+    private String shipmentID;
 
-    @ManyToOne
-    private Order order;
     @Enumerated(EnumType.STRING)
     private Status status;
+
+    @OneToOne
+    private Order order;
+
 
 }

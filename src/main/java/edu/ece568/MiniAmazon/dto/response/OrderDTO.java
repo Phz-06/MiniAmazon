@@ -18,8 +18,6 @@ public class OrderDTO {
     public static OrderDTO fromEntity(Order order) {
         OrderDTO dto = new OrderDTO();
         dto.setId(order.getId());
-        dto.setDeliveryX(order.getDeliveryX());
-        dto.setDeliveryY(order.getDeliveryY());
         dto.setStatus(order.getStatus());
         dto.setUpsAccountName(order.getUpsAccountName());
         

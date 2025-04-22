@@ -15,7 +15,7 @@ public class Product extends AbstractPersistable<Long> {
     private String name;
 
     @Column(unique = true)
-    private String productID;
+    private String productId;
     private double price;
     private String description;
     private int quantity;

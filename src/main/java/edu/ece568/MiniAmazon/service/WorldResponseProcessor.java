@@ -106,8 +106,30 @@ public class WorldResponseProcessor {
      */
     private void processReadyPackage(APacked ready) {
         long shipmentId = ready.getShipid();
-        log.info("Package {} is packed and ready for pickup", shipmentId);
-        //TODO: Update package status in the database
+        long seqNum = ready.getSeqnum();
+        
+        log.info("Package {} is packed and ready for pickup (seqNum: {})", shipmentId, seqNum);
+        
+        try {
+            // Update shipment status in the database
+            // You'll need to create or inject a ShipmentService to handle these operations
+            // Example:
+            // shipmentService.updateStatus(shipmentId, ShipmentStatus.PACKED);
+            
+            // For now, we'll just log it since the service isn't implemented
+            log.info("Updating shipment {} status to PACKED", shipmentId);
+            
+            // Here you would also:
+            // 1. Update any tracking information
+            // 2. Notify other components that might need to take action
+            // 3. Prepare for the next step in the shipping process
+            
+            // You could also create a task for the next step (e.g., loading onto truck)
+            // Example:
+            // taskService.createLoadTask(shipmentId, warehouse);
+        } catch (Exception e) {
+            log.error("Error processing ready package notification for shipment {}", shipmentId, e);
+        }
     }
 
     /**
@@ -117,8 +139,29 @@ public class WorldResponseProcessor {
      */
     private void processLoadedPackage(ALoaded loaded) {
         long shipmentId = loaded.getShipid();
-        log.info("Package {} is loaded onto truck", shipmentId);
-        //TODO: Update package status in the database
+        long seqNum = loaded.getSeqnum();
+        
+        log.info("Package {} is loaded onto truck (seqNum: {})", shipmentId, seqNum);
+        
+        try {
+            // Update shipment status in the database
+            // Example:
+            // shipmentService.updateStatus(shipmentId, ShipmentStatus.LOADED);
+            
+            // For now, just log it
+            log.info("Updating shipment {} status to LOADED", shipmentId);
+            
+            // Here you would:
+            // 1. Update tracking information
+            // 2. Notify relevant systems (e.g., delivery tracking)
+            // 3. Update inventory and warehouse management systems
+            
+            // You could also trigger the next step in the delivery process
+            // Example:
+            // deliveryService.initiateDelivery(shipmentId);
+        } catch (Exception e) {
+            log.error("Error processing loaded package notification for shipment {}", shipmentId, e);
+        }
     }
 
     /**
@@ -129,9 +172,32 @@ public class WorldResponseProcessor {
     private void processPackageStatus(APackage packageStatus) {
         long packageId = packageStatus.getPackageid();
         String status = packageStatus.getStatus();
-        log.info("Package {} has status: {}", packageId, status);
+        long seqNum = packageStatus.getSeqnum();
+        
+        log.info("Package {} has status: {} (seqNum: {})", packageId, status, seqNum);
 
-        //TODO: Update package status in the database
+        try {
+            // Record the package status in the database
+            // Example:
+            // shipmentService.updateShipmentStatus(packageId, status);
+            
+            // Log the status update
+            log.info("Updating package {} with status: {}", packageId, status);
+            
+            // Depending on the status, you might want to trigger different actions
+            // For example, if the status is "delivered", you might want to:
+            // 1. Update the order status
+            // 2. Send a notification to the customer
+            // 3. Update inventory records
+            
+            // Example:
+            // if (status.equals("delivered")) {
+            //     orderService.completeOrder(packageId);
+            //     notificationService.notifyCustomer(packageId, "Your package has been delivered!");
+            // }
+        } catch (Exception e) {
+            log.error("Error processing package status for package {}", packageId, e);
+        }
     }
 
     /**
