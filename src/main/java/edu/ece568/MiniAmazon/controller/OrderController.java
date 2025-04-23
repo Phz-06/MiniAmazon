@@ -39,7 +39,6 @@ public class OrderController {
                 "orderId", String.valueOf(tempOrder.getId()),
                 "status", "success"
         );
-        eventPublisher.publish(new CreateOrderEvent(order.getUserId(), order.getItems()));
         return ResponseEntity.accepted().body(orderDetails);
     }
 
@@ -94,5 +93,14 @@ public class OrderController {
         return ResponseEntity.ok(orderDTO);
     }
 
+    @GetMapping("/{orderId}/status")
+    public ResponseEntity<Map<String, String>> getOrderStatus(@PathVariable Long orderId) {
+        Order order = orderService.getOrder(orderId);
+        Map<String, String> response = Map.of(
+                "orderId", String.valueOf(orderId),
+                "status", order.getStatus().name()
+        );
+        return ResponseEntity.ok(response);
+    }
 
 }
