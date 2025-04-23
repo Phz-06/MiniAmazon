@@ -9,6 +9,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import lombok.extern.slf4j.Slf4j;
 
+import java.math.BigDecimal;
+
 @Service
 @Slf4j
 public class ProductService {
@@ -48,7 +50,7 @@ public class ProductService {
      * @throws IllegalArgumentException if the warehouse doesn't exist or if the productID already exists
      */
     @Transactional
-    public Product createProduct(String name, String productID, double price, 
+    public Product createProduct(String name, String productID, BigDecimal price,
                                 String description, int quantity, String category, 
                                 Long wareHouseId) {
         try {
@@ -99,7 +101,7 @@ public class ProductService {
         // Save and return the updated product
         return productRepository.save(product);
     }
-    
+
     /**
      * Increase inventory for a product that arrived from the world simulator
      * 
@@ -141,7 +143,7 @@ public class ProductService {
             product.setProductId(productStrId);
             product.setName(description);
             product.setDescription(description);
-            product.setPrice(9.99); // Default price
+            product.setPrice(BigDecimal.ONE); // Default price
             product.setQuantity(count);
             product.setCategory("General"); // Default category
             product.setWareHouse(warehouse);

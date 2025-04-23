@@ -5,6 +5,7 @@ import lombok.Getter;
 import lombok.Setter;
 import org.springframework.data.jpa.domain.AbstractPersistable;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -26,4 +27,9 @@ public class Order extends AbstractPersistable<Long> {
     private Status status;  // e.g., CREATED, PACKING, PACKED, LOADING, LOADED, DELIVERING, DELIVERED
 
     private String upsAccountName;  // optional
+
+    private BigDecimal totalPrice;  // total price of the order
+
+    private int deliveryX;
+    private int deliveryY;
 }

@@ -7,6 +7,8 @@ import lombok.Getter;
 import lombok.Setter;
 import org.springframework.data.jpa.domain.AbstractPersistable;
 
+import java.math.BigDecimal;
+
 @Setter
 @Getter
 @Entity
@@ -16,7 +18,7 @@ public class Product extends AbstractPersistable<Long> {
 
     @Column(unique = true)
     private String productId;
-    private double price;
+    private BigDecimal price;
     private String description;
     private int quantity;
     private String category;

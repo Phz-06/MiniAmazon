@@ -3,6 +3,8 @@ package edu.ece568.MiniAmazon.dto.response;
 import edu.ece568.MiniAmazon.model.Order;
 import edu.ece568.MiniAmazon.model.Status;
 import lombok.Data;
+
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -13,6 +15,7 @@ public class OrderDTO {
     private int deliveryX;
     private int deliveryY;
     private Status status;
+    private BigDecimal totalPrice;
     private String upsAccountName;
     
     public static OrderDTO fromEntity(Order order) {
@@ -20,7 +23,9 @@ public class OrderDTO {
         dto.setId(order.getId());
         dto.setStatus(order.getStatus());
         dto.setUpsAccountName(order.getUpsAccountName());
-        
+        dto.setDeliveryX(order.getDeliveryX());
+        dto.setDeliveryY(order.getDeliveryY());
+        dto.totalPrice = order.getTotalPrice();
         if (order.getOrderItems() != null) {
             dto.setOrderItems(order.getOrderItems().stream()
                 .map(OrderItemDTO::fromEntity)
