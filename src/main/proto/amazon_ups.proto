@@ -1,0 +1,95 @@
+syntax = "proto3";
+import "google/protobuf/timestamp.proto";
+package edu.ece568.MiniAmazon.proto;
+
+option java_package = "edu.ece568.MiniAmazon.proto";
+option java_outer_classname = "Amazon_UPS";
+
+// Coordinates
+message Coordinates {
+  int32 x = 1;
+  int32 y = 2;
+}
+
+// Acknowledgment
+message Ack {
+  int64 seqnum = 1;
+}
+
+// Error Message
+message Error {
+  int64 seqnum = 1;
+
+  enum ErrorType {
+    TIMEOUT = 0;            // Ack Timeout
+    DUPLICATE_SEQNUM = 1;   // Repeat sequence number
+    INVALID_TRUCK = 2;      // Invalid truck ID
+    MISSING_PACKAGE = 3;    // Package doesn’t exist
+  }
+
+  ErrorType error_code = 2;
+  string message = 3;
+}
+
+// Shipment Request from Amazon to UPS
+message ShipmentRequest {
+  string package_id = 1;
+  int32 warehouse_id = 2;
+  Coordinates destination = 3;
+  string ups_account = 4;
+  int64 seqnum = 5;
+}
+
+// Load Confirmation from Amazon to UPS
+message LoadConfirmation {
+  string package_id = 1;
+  int32 truck_id = 2;
+  int64 seqnum = 3;
+}
+
+// Truck Assignment from UPS to Amazon
+message TruckAssignment {
+  string package_id = 1;
+  int32 truck_id = 2;
+  google.protobuf.Timestamp estimated_arrival = 3;
+  int64 seqnum = 4;
+}
+
+// Delivery Update from UPS to Amazon
+message DeliveryUpdate {
+  string package_id = 1;
+
+  enum Status {
+    PACKING = 0;
+    OUT_FOR_DELIVERY = 1;
+    DELIVERING = 2;
+  }
+
+  Status status = 2;
+  Coordinates current_location = 3;
+  int64 seqnum = 4;
+}
+
+// Delivery Completed Notification from UPS to Amazon
+message DeliveryCompleted {
+  string package_id = 1;
+  google.protobuf.Timestamp delivered_at = 2;
+  int64 seqnum = 3;
+}
+
+// Generic Message Wrapper
+message GenericMessage {
+  string type = 1; // E.g., "shipment_request", "ack", etc.
+  int64 seqnum = 2;
+
+  oneof data {
+    ShipmentRequest shipment_request = 3;
+    LoadConfirmation load_confirmation = 4;
+    TruckAssignment truck_assignment = 5;
+    DeliveryUpdate delivery_update = 6;
+    DeliveryCompleted delivery_completed = 7;
+    Ack ack = 8;
+    Error error = 9;
+    // Add new message types as needed
+  }
+}

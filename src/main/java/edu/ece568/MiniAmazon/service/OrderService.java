@@ -69,6 +69,7 @@ public class OrderService {
         return order;
     }
 
+    @Transactional
     public void confirmOrder(long orderId, int x, int y) {
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new IllegalArgumentException("Order with ID " + orderId + " not found"));
@@ -88,6 +89,7 @@ public class OrderService {
         }
     }
 
+    @Transactional
     public void cancelOrder(long orderId) {
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new IllegalArgumentException("Order with ID " + orderId + " not found"));
@@ -106,9 +108,20 @@ public class OrderService {
         }
     }
 
+    @Transactional
     public Order getOrder(long orderId) {
         return orderRepository.findById(orderId)
                 .orElseThrow(() -> new IllegalArgumentException("Order with ID " + orderId + " not found"));
+    }
+
+    @Transactional
+    public void saveOrder(Order order) {
+        orderRepository.save(order);
+    }
+
+    @Transactional
+    public Order getOrderByShipmentId(String shipmentId) {
+        return orderRepository.findOrderByShipmentId(shipmentId).orElseThrow(() -> new IllegalArgumentException("Order with shipment ID " + shipmentId + " not found"));
     }
 
 

@@ -27,6 +27,12 @@ public class Order extends AbstractPersistable<Long> {
     @OneToOne(mappedBy = "order", cascade = CascadeType.ALL)
     private AmazonPackage amazonPackage;
 
+    @Column(unique = true, name = "shipment_id")
+    private String shipmentId;
+
+    @Column(name = "truck_id")
+    private int truckId;
+
     @Enumerated(EnumType.STRING)
     private Status status;  // e.g., CREATED, PACKING, PACKED, LOADING, LOADED, DELIVERING, DELIVERED
 
