@@ -7,6 +7,8 @@ import org.springframework.data.repository.CrudRepository;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
+
 @Repository
 public interface ProductRepository extends CrudRepository<Product, Long> {
     Product findByName(String name);
@@ -22,4 +24,15 @@ public interface ProductRepository extends CrudRepository<Product, Long> {
     @Modifying
     @Query("UPDATE Product p SET p.quantity = p.quantity + :quantity WHERE p.productId = :productId")
     int increaseProductQuantity(@Param("productId") String productId, @Param("quantity") int quantity);
+    
+    // Find products by category
+    List<Product> findByCategory(String category);
+    
+    // Find all products with quantity greater than zero
+    @Query("SELECT p FROM Product p WHERE p.quantity > 0")
+    List<Product> findAvailableProducts();
+    
+    // Get all distinct product categories
+    @Query("SELECT DISTINCT p.category FROM Product p WHERE p.quantity > 0")
+    List<String> findAllCategories();
 }

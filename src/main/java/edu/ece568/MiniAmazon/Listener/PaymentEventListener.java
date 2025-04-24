@@ -7,6 +7,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Service;
 
+import java.nio.file.AccessDeniedException;
+
 @Slf4j
 @Service
 public class PaymentEventListener {
@@ -18,7 +20,7 @@ public class PaymentEventListener {
     }
 
     @EventListener
-    public void handlePaymentEvent(ProcessPaymentEvent event) {
+    public void handlePaymentEvent(ProcessPaymentEvent event) throws AccessDeniedException {
         log.info("Received PaymentEvent: {} - {}$", event.getOrderId(), event.getAmount());
         paymentService.processPayment(event.getOrderId());
         log.info("Payment processed for order id {}", event.getOrderId());

@@ -10,6 +10,7 @@ import org.springframework.transaction.annotation.Transactional;
 import lombok.extern.slf4j.Slf4j;
 
 import java.math.BigDecimal;
+import java.util.List;
 
 @Service
 @Slf4j
@@ -34,6 +35,34 @@ public class ProductService {
     public Product getProduct(long productId) {
         return productRepository.findById(productId)
                 .orElseThrow(() -> new IllegalArgumentException("Product with ID " + productId + " not found"));
+    }
+    
+    /**
+     * Get all available products (with quantity > 0)
+     * 
+     * @return List of available products
+     */
+    public List<Product> getAllAvailableProducts() {
+        return productRepository.findAvailableProducts();
+    }
+    
+    /**
+     * Find products by category
+     * 
+     * @param category The category to search for
+     * @return List of products in the specified category
+     */
+    public List<Product> getProductsByCategory(String category) {
+        return productRepository.findByCategory(category);
+    }
+    
+    /**
+     * Get all available product categories
+     * 
+     * @return List of all distinct product categories
+     */
+    public List<String> getAllCategories() {
+        return productRepository.findAllCategories();
     }
     
     /**
