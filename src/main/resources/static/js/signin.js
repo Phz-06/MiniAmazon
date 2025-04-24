@@ -16,7 +16,7 @@
 
         if (!res.ok) {
             const text = await res.text();
-            alert("Login failed: " + text);
+            alert("Login failed: " + text + ".");
             return;
         }
 
@@ -24,6 +24,7 @@
         localStorage.setItem("token", data.token); // Store JWT in local storage
         window.location.href = "/"; // Redirect to main page
     } catch (err) {
-        alert(err);
+        console.error(err);
+        alert("Error when signing in. Please try again later.")
     }
 });
