@@ -43,9 +43,9 @@ public class WebSecurityConfig {
                 .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(
+                                "/",
                                 "/signin",
                                 "/register",
-                                "/",
                                 "/css/**",
                                 "/js/**",
                                 "/images/**",

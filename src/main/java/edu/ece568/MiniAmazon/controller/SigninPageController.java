@@ -20,9 +20,4 @@ public class SigninPageController {
         model.addAttribute("content", "register :: content");
         return "layout";
     }
-
-    @GetMapping("/")
-    public String test() {
-        return "signin";
-    }
 }
