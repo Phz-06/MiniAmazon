@@ -11,7 +11,7 @@ public class SigninPageController {
         model.addAttribute("title", "Mini-Amazon Sign-In");
         model.addAttribute("template", "signin");
         model.addAttribute("fragment", "content");
-        model.addAttribute("js", "login.js");
+        model.addAttribute("js", "signin.js");
         return "layout";
     }
 }
