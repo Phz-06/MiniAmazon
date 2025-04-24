@@ -4,6 +4,7 @@ import edu.ece568.MiniAmazon.service.WorldService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
@@ -28,6 +29,7 @@ public class WorldController {
      * @param worldId Optional ID of an existing world
      * @return Connection status
      */
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/connect")
     public ResponseEntity<Map<String, Object>> connect(
             @RequestParam(required = false) Long worldId,
@@ -53,6 +55,7 @@ public class WorldController {
      * 
      * @return Disconnection status
      */
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/disconnect")
     public ResponseEntity<Map<String, Object>> disconnect() {
         Map<String, Object> response = new HashMap<>();
@@ -73,6 +76,7 @@ public class WorldController {
      * @param speed The simulation speed
      * @return Operation status
      */
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/speed")
     public ResponseEntity<Map<String, Object>> setSpeed(@RequestParam int speed) {
         Map<String, Object> response = new HashMap<>();
@@ -97,6 +101,7 @@ public class WorldController {
      * @param count The count to buy
      * @return Operation status
      */
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/buy")
     public ResponseEntity<Map<String, Object>> buyProduct(
             @RequestParam int warehouseId,
@@ -132,6 +137,7 @@ public class WorldController {
      * @param products The list of products in format [[id, count, description], ...]
      * @return Operation status
      */
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/pack")
     public ResponseEntity<Map<String, Object>> packOrder(
             @RequestParam int warehouseId,
@@ -165,6 +171,7 @@ public class WorldController {
      * @param shipmentId The ID of the shipment
      * @return Operation status
      */
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/load")
     public ResponseEntity<Map<String, Object>> loadPackage(
             @RequestParam int warehouseId,
@@ -196,6 +203,7 @@ public class WorldController {
      * @param packageId The ID of the package
      * @return Operation status
      */
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/package/{packageId}")
     public ResponseEntity<Map<String, Object>> queryPackage(@PathVariable long packageId) {
         Map<String, Object> response = new HashMap<>();
@@ -222,6 +230,7 @@ public class WorldController {
      * 
      * @return The world ID
      */
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/id")
     public ResponseEntity<Map<String, Object>> getWorldId() {
         Map<String, Object> response = new HashMap<>();

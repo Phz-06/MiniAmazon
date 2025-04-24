@@ -13,7 +13,7 @@ public class ProductSummaryDTO {
         ProductSummaryDTO dto = new ProductSummaryDTO();
         dto.setId(product.getId());
         dto.setName(product.getName());
-        dto.setProductID(product.getProductID());
+        dto.setProductID(product.getProductId());
         return dto;
     }
 } 

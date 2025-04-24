@@ -14,6 +14,7 @@ import edu.ece568.MiniAmazon.service.OrderService;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
@@ -30,6 +31,7 @@ public class OrderController {
         this.orderService = orderService;
     }
 
+    @PreAuthorize("isAuthenticated()")
     @PostMapping("/create")
     public ResponseEntity<Map<String, String>> createOrder(@Valid @RequestBody OrderRequest order) {
         log.info("Received order creation request for user ID: {}", order.getUserId());
@@ -42,6 +44,7 @@ public class OrderController {
         return ResponseEntity.accepted().body(orderDetails);
     }
 
+    @PreAuthorize("isAuthenticated()")
     @PostMapping("/{orderId}/confirm")
     public ResponseEntity<Map<String, String>> confirmOrder(
             @PathVariable Long orderId,
@@ -59,6 +62,7 @@ public class OrderController {
         return ResponseEntity.accepted().body(response);
     }
 
+    @PreAuthorize("isAuthenticated()")
     @PostMapping("/{orderId}/cancel")
     public ResponseEntity<Map<String, String>> cancelOrder(@PathVariable Long orderId) {
         log.info("Received order cancellation request for order ID: {}", orderId);
@@ -72,6 +76,7 @@ public class OrderController {
         return ResponseEntity.accepted().body(response);
     }
 
+    @PreAuthorize("isAuthenticated()")
     @PostMapping("/{orderId}/payment")
     public ResponseEntity<Map<String, String>> processPayment(
             @PathVariable Long orderId,
@@ -87,12 +92,14 @@ public class OrderController {
         return ResponseEntity.accepted().body(response);
     }
 
+    @PreAuthorize("isAuthenticated()")
     @GetMapping("/{orderId}")
     public ResponseEntity<OrderDTO> getOrder(@PathVariable Long orderId) {
         OrderDTO orderDTO = OrderDTO.fromEntity(orderService.getOrder(orderId));
         return ResponseEntity.ok(orderDTO);
     }
 
+    @PreAuthorize("isAuthenticated()")
     @GetMapping("/{orderId}/status")
     public ResponseEntity<Map<String, String>> getOrderStatus(@PathVariable Long orderId) {
         Order order = orderService.getOrder(orderId);
