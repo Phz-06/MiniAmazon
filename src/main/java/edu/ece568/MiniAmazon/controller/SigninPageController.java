@@ -2,7 +2,7 @@ package edu.ece568.MiniAmazon.controller;
 
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.*;
 
 @Controller
 public class SigninPageController {
@@ -19,5 +19,11 @@ public class SigninPageController {
         model.addAttribute("title", "Mini-Amazon Registration");
         model.addAttribute("content", "register :: content");
         return "layout";
+    }
+
+    @GetMapping("/")
+    @ResponseBody
+    public String test() {
+        return "Hello world";
     }
 }

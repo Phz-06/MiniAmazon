@@ -45,6 +45,7 @@ public class WebSecurityConfig {
                         .requestMatchers(
                                 "/signin",
                                 "/register",
+                                "/",
                                 "/css/**",
                                 "/js/**",
                                 "/images/**",
