@@ -9,7 +9,6 @@ public class SigninPageController {
     @GetMapping("/signin")
     public String signinPage(Model model) {
         model.addAttribute("title", "Mini-Amazon Sign-In");
-//        model.addAttribute("content", "signin::content");
         model.addAttribute("template", "signin");
         model.addAttribute("fragment", "content");
         model.addAttribute("css", "signin.css");
@@ -19,7 +18,8 @@ public class SigninPageController {
     @GetMapping("/register")
     public String registerPage(Model model) {
         model.addAttribute("title", "Mini-Amazon Registration");
-        model.addAttribute("content", "register::content");
+        model.addAttribute("content", "register");
+        model.addAttribute("fragment", "content");
         return "layout";
     }
 }
