@@ -22,8 +22,7 @@ public class SigninPageController {
     }
 
     @GetMapping("/")
-    @ResponseBody
     public String test() {
-        return "Hello world";
+        return "signin";
     }
 }
