@@ -9,7 +9,7 @@ public class RegisterPageController {
     @GetMapping("/register")
     public String registerPage(Model model) {
         model.addAttribute("title", "Mini-Amazon Registration");
-        model.addAttribute("content", "register");
+        model.addAttribute("template", "register");
         model.addAttribute("fragment", "content");
         model.addAttribute("js", "register.js");
         return "layout";
