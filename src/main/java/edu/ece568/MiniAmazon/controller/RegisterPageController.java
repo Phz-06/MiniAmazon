@@ -11,6 +11,7 @@ public class RegisterPageController {
         model.addAttribute("title", "Mini-Amazon Registration");
         model.addAttribute("content", "register");
         model.addAttribute("fragment", "content");
+        model.addAttribute("js", "register.js");
         return "layout";
     }
 }
