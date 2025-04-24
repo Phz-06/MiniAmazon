@@ -20,6 +20,7 @@ public class SigninPageController {
         model.addAttribute("title", "Mini-Amazon Registration");
         model.addAttribute("content", "register");
         model.addAttribute("fragment", "content");
+        model.addAttribute("css", "register.css");
         return "layout";
     }
 }
