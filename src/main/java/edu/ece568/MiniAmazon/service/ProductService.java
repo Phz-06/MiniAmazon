@@ -186,4 +186,35 @@ public class ProductService {
         // Save the product
         productRepository.save(product);
     }
+
+    /**
+     * Updates only the price and category of a product (admin only operation)
+     * Other properties are controlled by the world simulator and should not be modified
+     *
+     * @param productId The ID of the product to update
+     * @param price New price (can be null to keep existing price)
+     * @param category New category (can be null to keep existing category)
+     * @return The updated Product entity
+     * @throws IllegalArgumentException if the product doesn't exist
+     */
+    @Transactional
+    public Product updateProductPriceAndCategory(Long productId, BigDecimal price, String category) {
+        // Find the product
+        Product product = productRepository.findById(productId)
+                .orElseThrow(() -> new IllegalArgumentException("Product with ID " + productId + " not found"));
+
+        // Update only the allowed fields if they are not null
+        if (price != null) {
+            product.setPrice(price);
+        }
+        
+        if (category != null && !category.isEmpty()) {
+            product.setCategory(category);
+        }
+
+        // Save and return the updated product
+        log.info("Admin updated product {} - Price: {}, Category: {}", 
+                product.getProductId(), price, category);
+        return productRepository.save(product);
+    }
 }
