@@ -17,8 +17,7 @@ services:
       context: .
       dockerfile: Dockerfile
     volumes:
-      - .:/app
-    working_dir: /app
+      - ./src/main/resources:/app/src/main/resources
     environment:
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/mydatabase
       SPRING_DATASOURCE_USERNAME: amazonuser
