@@ -25,6 +25,8 @@ dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-security'
     implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
 
+    developmentOnly("org.springframework.boot:spring-boot-devtools")
+
 	// Protocol Buffers
 	implementation 'com.google.protobuf:protobuf-java:3.22.2'
 
