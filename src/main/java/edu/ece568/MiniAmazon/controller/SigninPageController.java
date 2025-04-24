@@ -10,7 +10,7 @@ public class SigninPageController {
     public String signinPage(Model model) {
         model.addAttribute("title", "Mini-Amazon Sign-In");
         model.addAttribute("content", "signin :: content");
-        model.addAttribute("css", "signin :: ");
+        model.addAttribute("css", "signin.css");
         return "layout";
     }
 
