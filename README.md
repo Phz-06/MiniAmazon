@@ -11,7 +11,7 @@ This project is the backend system for a miniature e-commerce platform, mimickin
 *   **Spring Security 6.x** (JWT Authentication)
 *   **Spring Data JPA / Hibernate**
 *   **PostgreSQL**
-*   **Maven** (or Gradle, depending on project setup)
+*   **Gradle**
 *   **Lombok**
 *   **jjwt** (Java JWT library)
 
