@@ -3,6 +3,7 @@ package edu.ece568.MiniAmazon.service;
 import com.google.protobuf.CodedInputStream;
 import com.google.protobuf.CodedOutputStream;
 import com.google.protobuf.Message;
+import edu.ece568.MiniAmazon.CatalogInitializer;
 import edu.ece568.MiniAmazon.model.WareHouse;
 import edu.ece568.MiniAmazon.repository.WareHouseRepository;
 import edu.ece568.MiniAmazon.proto.WorldAmazon.AConnect;
@@ -38,6 +39,8 @@ public class WorldService {
     private InputStream inputStream;
     
     private final WareHouseRepository wareHouseRepository;
+
+    private final CatalogInitializer catalogInitializer;
     
     /**
      * -- GETTER --
@@ -62,8 +65,9 @@ public class WorldService {
     // Queue for responses
     private BlockingQueue<AResponses> responseQueue = new LinkedBlockingQueue<>();
     
-    public WorldService(WareHouseRepository wareHouseRepository) {
+    public WorldService(WareHouseRepository wareHouseRepository, CatalogInitializer catalogInitializer) {
         this.wareHouseRepository = wareHouseRepository;
+        this.catalogInitializer = catalogInitializer;
     }
 
     /**
@@ -125,6 +129,9 @@ public class WorldService {
 
                 // Start the response listener thread
                 startResponseListener();
+
+                // Initialize the initial catalog
+                catalogInitializer.run();
 
                 return true;
             } else {
