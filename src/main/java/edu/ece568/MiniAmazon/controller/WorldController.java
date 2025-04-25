@@ -107,8 +107,7 @@ public class WorldController {
             @RequestParam int warehouseId,
             @RequestParam long productId,
             @RequestParam String description,
-            @RequestParam int count,
-            @RequestParam(required = false) Long price) {
+            @RequestParam int count) {
         
         Map<String, Object> response = new HashMap<>();
         

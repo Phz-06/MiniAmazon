@@ -25,10 +25,11 @@ public class AdminInitializer implements CommandLineRunner {
         // Check if admin exists
         if (userRepository.findUserByRole((UserRole.ADMIN)).isEmpty()) {
             // Create default admin if none exists
+            log.info("Creating admin user");
             User adminUser = new User();
             adminUser.setUsername("admin");
             adminUser.setPassword(passwordEncoder.encode("admin")); // Use secure password in production
-            adminUser.setEmail("lqngg66@gmail.com");
+            adminUser.setEmail("lqngg67@gmail.com");
             adminUser.setFirstName("Admin");
             adminUser.setLastName("User");
             adminUser.setRole(UserRole.ADMIN);

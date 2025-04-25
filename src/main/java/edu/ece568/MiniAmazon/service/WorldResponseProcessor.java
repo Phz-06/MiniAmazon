@@ -1,5 +1,9 @@
 package edu.ece568.MiniAmazon.service;
 
+import edu.ece568.MiniAmazon.Event.LoadConfirmationEvent;
+import edu.ece568.MiniAmazon.Event.ShipmentRequestEvent;
+import edu.ece568.MiniAmazon.model.Order;
+import edu.ece568.MiniAmazon.model.Status;
 import edu.ece568.MiniAmazon.proto.WorldAmazon.AResponses;
 import edu.ece568.MiniAmazon.proto.WorldAmazon.APurchaseMore;
 import edu.ece568.MiniAmazon.proto.WorldAmazon.AProduct;
@@ -12,6 +16,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
+import java.util.HashMap;
+import java.util.Map;
+
+import static org.springframework.data.repository.util.ClassUtils.ifPresent;
+
 /**
  * Service to process responses from the World Simulator
  */
@@ -21,11 +30,36 @@ public class WorldResponseProcessor {
 
     private final WorldService worldService;
     private final ProductService productService;
+    private final EventPublisher eventPublisher;
+    
+    // Map to store package details (destination coordinates, UPS account) keyed by shipment ID
+    private final Map<Long, Map<String, Object>> packageDetailsMap = new HashMap<>();
+    private final OrderService orderService;
 
     @Autowired
-    public WorldResponseProcessor(WorldService worldService, ProductService productService) {
+    public WorldResponseProcessor(WorldService worldService, ProductService productService, EventPublisher eventPublisher, OrderService orderService) {
         this.worldService = worldService;
         this.productService = productService;
+        this.eventPublisher = eventPublisher;
+        this.orderService = orderService;
+    }
+
+    /**
+     * Register a package's details for future reference
+     */
+    public void registerPackageDetails(String packageId, int warehouseId, int destX, int destY, String upsAccount) {
+        // Convert package ID string to numeric shipment ID
+        long shipmentId = Long.parseLong(packageId.replace("PKG-", ""));
+        
+        Map<String, Object> details = new HashMap<>();
+        details.put("packageId", packageId);
+        details.put("warehouseId", warehouseId);
+        details.put("destX", destX);
+        details.put("destY", destY);
+        details.put("upsAccount", upsAccount);
+        
+        packageDetailsMap.put(shipmentId, details);
+        log.info("Registered package details for shipment ID: {}, package ID: {}", shipmentId, packageId);
     }
 
     /**
@@ -111,22 +145,41 @@ public class WorldResponseProcessor {
         log.info("Package {} is packed and ready for pickup (seqNum: {})", shipmentId, seqNum);
         
         try {
-            // Update shipment status in the database
-            // You'll need to create or inject a ShipmentService to handle these operations
-            // Example:
-            // shipmentService.updateStatus(shipmentId, ShipmentStatus.PACKED);
+            // Get the package details
+            Map<String, Object> packageDetails = packageDetailsMap.get(shipmentId);
+            if (packageDetails == null) {
+                log.error("No package details found for shipment ID: {}", shipmentId);
+                return;
+            }
             
-            // For now, we'll just log it since the service isn't implemented
+            String packageId = (String) packageDetails.get("packageId");
+            int warehouseId = (int) packageDetails.get("warehouseId");
+            int destX = (int) packageDetails.get("destX");
+            int destY = (int) packageDetails.get("destY");
+            String upsAccount = (String) packageDetails.get("upsAccount");
+            
+            // Update shipment status
             log.info("Updating shipment {} status to PACKED", shipmentId);
+            Order order = orderService.getOrderByShipmentId("PKG-" + shipmentId);
+            if (order != null) {
+                order.setStatus(Status.PACKED);
+                orderService.saveOrder(order);
+            } else {
+                log.error("No order found for shipment ID: {}", shipmentId);
+                return;
+            }
+            // Publish event to request UPS to pick up the package
+            ShipmentRequestEvent shipmentRequestEvent = new ShipmentRequestEvent(
+                    packageId,
+                    warehouseId,
+                    destX,
+                    destY,
+                    upsAccount
+            );
             
-            // Here you would also:
-            // 1. Update any tracking information
-            // 2. Notify other components that might need to take action
-            // 3. Prepare for the next step in the shipping process
+            eventPublisher.publish(shipmentRequestEvent);
+            log.info("Published shipment request event for package: {}", packageId);
             
-            // You could also create a task for the next step (e.g., loading onto truck)
-            // Example:
-            // taskService.createLoadTask(shipmentId, warehouse);
         } catch (Exception e) {
             log.error("Error processing ready package notification for shipment {}", shipmentId, e);
         }
@@ -144,21 +197,38 @@ public class WorldResponseProcessor {
         log.info("Package {} is loaded onto truck (seqNum: {})", shipmentId, seqNum);
         
         try {
+            // Get package details
+            Map<String, Object> packageDetails = packageDetailsMap.get(shipmentId);
+            if (packageDetails == null) {
+                log.error("No package details found for shipment ID: {}", shipmentId);
+                return;
+            }
+            
+            String packageId = (String) packageDetails.get("packageId");
+            
             // Update shipment status in the database
-            // Example:
-            // shipmentService.updateStatus(shipmentId, ShipmentStatus.LOADED);
-            
-            // For now, just log it
             log.info("Updating shipment {} status to LOADED", shipmentId);
+
+            Integer truckId = (Integer) packageDetails.get("truckId");
+            Order order = orderService.getOrderByShipmentId("PKG-" + shipmentId);
+            if (order != null) {
+                order.setStatus(Status.LOADED);
+                orderService.saveOrder(order);
+            }
+            if (truckId == null) {
+                log.error("No truck ID associated with package: {}", packageId);
+                return;
+            }
             
-            // Here you would:
-            // 1. Update tracking information
-            // 2. Notify relevant systems (e.g., delivery tracking)
-            // 3. Update inventory and warehouse management systems
+            // Publish event to confirm loading to UPS
+            LoadConfirmationEvent loadConfirmationEvent = new LoadConfirmationEvent(
+                    packageId,
+                    truckId
+            );
             
-            // You could also trigger the next step in the delivery process
-            // Example:
-            // deliveryService.initiateDelivery(shipmentId);
+            eventPublisher.publish(loadConfirmationEvent);
+            log.info("Published load confirmation event for package: {}, truck: {}", packageId, truckId);
+            
         } catch (Exception e) {
             log.error("Error processing loaded package notification for shipment {}", shipmentId, e);
         }
@@ -177,39 +247,47 @@ public class WorldResponseProcessor {
         log.info("Package {} has status: {} (seqNum: {})", packageId, status, seqNum);
 
         try {
-            // Record the package status in the database
-            // Example:
-            // shipmentService.updateShipmentStatus(packageId, status);
-            
-            // Log the status update
+            // Record the package status in the database (you'll need to implement this)
             log.info("Updating package {} with status: {}", packageId, status);
             
             // Depending on the status, you might want to trigger different actions
-            // For example, if the status is "delivered", you might want to:
-            // 1. Update the order status
-            // 2. Send a notification to the customer
-            // 3. Update inventory records
-            
-            // Example:
-            // if (status.equals("delivered")) {
-            //     orderService.completeOrder(packageId);
-            //     notificationService.notifyCustomer(packageId, "Your package has been delivered!");
-            // }
+            // For now, we'll just log the status
         } catch (Exception e) {
             log.error("Error processing package status for package {}", packageId, e);
         }
     }
 
     /**
-     * Process error response
+     * Process error messages from the World Simulator
      * 
      * @param error The AErr message
      */
     private void processError(AErr error) {
         String errorMessage = error.getErr();
         long originSeqNum = error.getOriginseqnum();
-        log.error("Error from world for command {}: {}", originSeqNum, errorMessage);
-
-        //TODO: Handle error in the application
+        long seqNum = error.getSeqnum();
+        
+        log.error("Error from World: {} (originSeqNum: {}, seqNum: {})", errorMessage, originSeqNum, seqNum);
+    }
+    
+    /**
+     * Store the truck ID for a package when we receive a truck assignment
+     */
+    public void associateTruckWithPackage(String packageId, int truckId) {
+        try {
+            // Convert package ID to shipment ID
+            long shipmentId = Long.parseLong(packageId.replace("PKG-", ""));
+            
+            // Update the package details
+            Map<String, Object> packageDetails = packageDetailsMap.get(shipmentId);
+            if (packageDetails != null) {
+                packageDetails.put("truckId", truckId);
+                log.info("Associated truck {} with package {}", truckId, packageId);
+            } else {
+                log.error("No package details found for package ID: {}", packageId);
+            }
+        } catch (Exception e) {
+            log.error("Error associating truck with package: {}", packageId, e);
+        }
     }
 } 

@@ -10,6 +10,7 @@ import org.springframework.transaction.annotation.Transactional;
 import lombok.extern.slf4j.Slf4j;
 
 import java.math.BigDecimal;
+import java.util.List;
 
 @Service
 @Slf4j
@@ -34,6 +35,34 @@ public class ProductService {
     public Product getProduct(long productId) {
         return productRepository.findById(productId)
                 .orElseThrow(() -> new IllegalArgumentException("Product with ID " + productId + " not found"));
+    }
+    
+    /**
+     * Get all available products (with quantity > 0)
+     * 
+     * @return List of available products
+     */
+    public List<Product> getAllAvailableProducts() {
+        return productRepository.findAvailableProducts();
+    }
+    
+    /**
+     * Find products by category
+     * 
+     * @param category The category to search for
+     * @return List of products in the specified category
+     */
+    public List<Product> getProductsByCategory(String category) {
+        return productRepository.findByCategory(category);
+    }
+    
+    /**
+     * Get all available product categories
+     * 
+     * @return List of all distinct product categories
+     */
+    public List<String> getAllCategories() {
+        return productRepository.findAllCategories();
     }
     
     /**
@@ -156,5 +185,36 @@ public class ProductService {
         
         // Save the product
         productRepository.save(product);
+    }
+
+    /**
+     * Updates only the price and category of a product (admin only operation)
+     * Other properties are controlled by the world simulator and should not be modified
+     *
+     * @param productId The ID of the product to update
+     * @param price New price (can be null to keep existing price)
+     * @param category New category (can be null to keep existing category)
+     * @return The updated Product entity
+     * @throws IllegalArgumentException if the product doesn't exist
+     */
+    @Transactional
+    public Product updateProductPriceAndCategory(Long productId, BigDecimal price, String category) {
+        // Find the product
+        Product product = productRepository.findById(productId)
+                .orElseThrow(() -> new IllegalArgumentException("Product with ID " + productId + " not found"));
+
+        // Update only the allowed fields if they are not null
+        if (price != null) {
+            product.setPrice(price);
+        }
+        
+        if (category != null && !category.isEmpty()) {
+            product.setCategory(category);
+        }
+
+        // Save and return the updated product
+        log.info("Admin updated product {} - Price: {}, Category: {}", 
+                product.getProductId(), price, category);
+        return productRepository.save(product);
     }
 }
