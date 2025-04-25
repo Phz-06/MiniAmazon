@@ -11,6 +11,7 @@ public class CatalogPageController {
         model.addAttribute("title", "Mini-Amazon");
         model.addAttribute("template", "catalog");
         model.addAttribute("fragment", "content");
+        model.addAttribute("css", "catalog.css");
         model.addAttribute("js", "catalog.js");
         return "layout";
     }
