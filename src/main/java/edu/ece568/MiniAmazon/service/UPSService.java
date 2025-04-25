@@ -248,11 +248,11 @@ public class UPSService {
      *
      * @param ack The acknowledgment message
      */
-    private void handleAcknowledgment(Ack ack) {
+    public void handleAcknowledgment(Ack ack) {
         long ackSeqNum = ack.getSeqnum();
         log.debug("Received acknowledgment for seqnum: {}", ackSeqNum);
         
-        // Remove from pending messages as it's been acknowledged
+        // Remove from pending messages
         pendingMessages.remove(ackSeqNum);
         retryCount.remove(ackSeqNum);
     }
@@ -394,5 +394,56 @@ public class UPSService {
                 log.error("Error closing UPS connection", e);
             }
         }
+    }
+    
+    /**
+     * Process an incoming message from the UPS socket server
+     * This is called by the UPSSocketServerService when it receives a message
+     * 
+     * @param message The message received from UPS
+     */
+    public void processIncomingMessage(GenericMessage message) {
+        try {
+            // Check for duplicates
+            if (isDuplicate(message.getSeqnum())) {
+                log.info("Received duplicate message with seqnum: {}, ignoring", message.getSeqnum());
+                return;
+            }
+            
+            // Add to processed seqnums
+            addToProcessedSeqnums(message.getSeqnum());
+            
+            // Add to queue for processing by the response processor
+            messageQueue.put(message);
+            
+            log.info("Added incoming message to processing queue: {}", message.getType());
+        } catch (Exception e) {
+            log.error("Error processing incoming message from UPS", e);
+        }
+    }
+    
+    /**
+     * Handle an acknowledgment received from UPS through the socket server
+     * 
+     * @param ack The acknowledgment received
+     */
+    public void handleIncomingAck(Ack ack) {
+        handleAcknowledgment(ack);
+    }
+    
+    /**
+     * Create an acknowledgment message for the given sequence number
+     * This is used by the UPSSocketServerService to send acknowledgments
+     * 
+     * @param seqNumToAck The sequence number to acknowledge
+     * @return The acknowledgment message
+     */
+    public GenericMessage createAcknowledgmentMessage(long seqNumToAck) {
+        Ack ack = Ack.newBuilder().setSeqnum(seqNumToAck).build();
+        
+        return GenericMessage.newBuilder()
+                .setType("ack")
+                .setAck(ack)
+                .build();
     }
 } 
