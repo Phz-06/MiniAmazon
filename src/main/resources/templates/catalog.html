@@ -1,0 +1,39 @@
+﻿<!-- Navbar -->
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark px-3">
+  <a class="navbar-brand d-flex align-items-center" href="#">
+    <span class="nav-brand-icon">🛒</span> Mini-Amazon
+  </a>
+
+  <div class="mx-auto w-50">
+    <form class="d-flex">
+      <select id="categoryFilter" class="form-select me-2" style="max-width: 120px;">
+        <option value="">All</option>
+        <!-- Categories -->
+      </select>
+      <input id="searchInput" class="form-control me-2" type="search" placeholder="Search products" />
+      <button class="btn btn-outline-light" type="button" onclick="loadProducts()">Search</button>
+    </form>
+  </div>
+
+  <div class="ms-auto d-flex text-white">
+    <div class="me-3 text-end">
+      <small>Hello, <span id="userName">Guest</span></small><br />
+      <strong>Account</strong>
+    </div>
+    <div class="me-3 text-end">
+      <small>&nbsp;</small><br />
+      <strong>Orders</strong>
+    </div>
+    <div class="text-end">
+      <small>&nbsp;</small><br />
+      <strong>Cart</strong>
+    </div>
+  </div>
+</nav>
+
+<!-- Catalog -->
+<div class="container mt-4">
+  <div id="productList" class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-3">
+    <!-- Products -->
+  </div>
+</div>
