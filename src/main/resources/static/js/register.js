@@ -1,8 +1,9 @@
 ﻿document.getElementById("registerForm").addEventListener("submit", async function(event) {
     event.preventDefault();
 
-    const name = document.getElementById("inputName").value.trim();
+    const username = document.getElementById("inputUsername").value.trim();
     const email = document.getElementById("inputEmail").value.trim();
+    const name = document.getElementById("inputName").value.trim();
     const password = document.getElementById("inputPassword").value;
     const repeatPassword = document.getElementById("inputRepeatPassword").value;
 
@@ -19,7 +20,7 @@
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
-                username: email,
+                username: username,
                 email: email,
                 password: password,
                 firstName: firstName,

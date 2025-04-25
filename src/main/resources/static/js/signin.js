@@ -1,7 +1,7 @@
 ﻿document.getElementById("signinForm").addEventListener("submit", async function(event) {
     event.preventDefault();
 
-    const email = document.getElementById("inputEmail").value;
+    const username = document.getElementById("inputUsername").value.trim();
     const password = document.getElementById("inputPassword").value;
 
     try {
@@ -9,7 +9,7 @@
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
-                username: email,
+                username: username,
                 password: password
             })
         });
