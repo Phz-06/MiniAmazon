@@ -3,7 +3,8 @@
     const query = document.getElementById("searchInput").value.toLowerCase();
 
     const res = await fetch("/api/products");
-    const products = await res.json();
+    const data = await res.json();
+    const products = data.products;
 
     const list = document.getElementById("productList");
     list.innerHTML = "";
