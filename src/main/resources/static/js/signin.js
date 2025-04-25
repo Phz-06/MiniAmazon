@@ -16,7 +16,7 @@
 
         if (!res.ok) {
             const text = await res.text();
-            alert("Login failed: " + text + ".");
+            alert("Sign-in failed: " + text + ".");
             return;
         }
 

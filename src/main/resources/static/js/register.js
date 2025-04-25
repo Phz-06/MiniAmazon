@@ -28,8 +28,15 @@
         });
 
         if (!res.ok) {
-            const text = await res.text();
-            alert("Registration failed: " + text + ".");
+            const contentType = res.headers.get("content-type");
+            if (contentType && contentType.includes("application/json")) {
+                const errorJson = await res.json();
+                let messages = Object.values(errorJson).join("\n");
+                alert("Registration failed:\n" + messages);
+            } else {
+                const text = await res.text();
+                alert("Registration failed: " + text);
+            }
             return;
         }
 
