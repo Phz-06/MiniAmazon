@@ -40,7 +40,8 @@ function stringToColor(str) {
 
 async function populateCategories() {
     const res = await fetch("/api/products/categories");
-    const categories = await res.json();
+    const data = await res.json();
+    const categories = data.categories;
     const select = document.getElementById("categoryFilter");
 
     categories.forEach(c => {
