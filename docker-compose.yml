@@ -1,29 +1,30 @@
-version: '2'
-
+version: '3'
 services:
   postgres:
-    image: 'postgres:latest'
+    image: postgres:latest
     environment:
-      - 'POSTGRES_DB=mydatabase'
-      - 'POSTGRES_PASSWORD=ERSSIG3'
-      - 'POSTGRES_USER=amazonuser'
-    ports:
-      - '5432:5432'
+      - POSTGRES_DB=amazon
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_USER=postgres
     volumes:
       - data-volume:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+
   web:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    volumes:
-      - ./src/main/resources:/app/src/main/resources
+    build: .
+    depends_on:
+      - postgres
     ports:
       - "8000:8000"
     environment:
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/mydatabase
-      SPRING_DATASOURCE_USERNAME: amazonuser
-      SPRING_DATASOURCE_PASSWORD: ERSSIG3
-    depends_on:
-      - postgres
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/amazon
+      - SPRING_DATASOURCE_USERNAME=postgres
+      - SPRING_DATASOURCE_PASSWORD=postgres
+      - WORLD_HOST=host.docker.internal
+      - WORLD_PORT=23456
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
 volumes:
   data-volume:

@@ -18,6 +18,7 @@ import edu.ece568.MiniAmazon.proto.WorldAmazon.APutOnTruck;
 import edu.ece568.MiniAmazon.proto.WorldAmazon.AQuery;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import jakarta.annotation.PreDestroy;
@@ -41,7 +42,13 @@ public class WorldService {
     private final WareHouseRepository wareHouseRepository;
 
     private final CatalogInitializer catalogInitializer;
-    
+
+    @Value("${world.host:localhost}")
+    private String worldHost;
+
+    @Value("${world.port:23456}")
+    private int worldPort;
+
     /**
      * -- GETTER --
      *  Get the world ID
@@ -82,7 +89,8 @@ public class WorldService {
         try {
             this.worldId = worldId;
 
-            socket = new Socket(host, port);
+            //socket = new Socket(host, port);
+            socket = new Socket(worldHost, worldPort);
             outputStream = socket.getOutputStream();
             inputStream = socket.getInputStream();
 
@@ -132,7 +140,7 @@ public class WorldService {
 
                 // Initialize the initial catalog
                 catalogInitializer.run();
-
+                this.worldId = connectedResponse.getWorldid();
                 return true;
             } else {
                 log.error("Failed to connect to world simulator: {}", connectedResponse.getResult());
