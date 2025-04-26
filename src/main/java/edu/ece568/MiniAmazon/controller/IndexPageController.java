@@ -9,6 +9,8 @@ public class IndexPageController {
     @GetMapping("/")
     public String indexPage(Model model) {
         model.addAttribute("title", "Mini-Amazon");
+        model.addAttribute("template", null);
+        model.addAttribute("fragment", null);
         model.addAttribute("js", "index.js");
         return "layout";
     }
