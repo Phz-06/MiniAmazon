@@ -161,3 +161,8 @@ async function getWorldId() {
     }
 }
 
+function logout() {
+    localStorage.removeItem("token");
+    window.location.href = "/signin";
+}
+
