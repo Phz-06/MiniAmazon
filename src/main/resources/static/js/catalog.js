@@ -16,18 +16,28 @@ async function loadProducts() {
         .filter(p => p.name.toLowerCase().includes(query) || p.description.toLowerCase().includes(query))
         .forEach(p => {
             const color = stringToColor(p.name);
+            const imgUrl = generateDummyImage(p.name);
 
             const card = document.createElement("div");
             card.className = "col";
             card.innerHTML = `
-            <div class="product-card" style="background-color:${color}">
-              <div class="product-title">${p.name}</div>
-              <div><strong>$${p.price.toFixed(2)}</strong></div>
-              <div class="product-description">${p.description}</div>
+            <div class="card h-100 shadow-sm" style="background-color: ${color};">
+              <img src="${imgUrl}" class="card-img-top" alt="${p.name}" style="object-fit: cover; height: 200px;">
+              <div class="card-body d-flex flex-column">
+                <h5 class="card-title">${p.name}</h5>
+                <h6 class="text-success mb-2">$${p.price.toFixed(2)}</h6>
+                <p class="card-text text-truncate" style="max-height: 60px;">${p.description}</p>
+              </div>
             </div>
           `;
             list.appendChild(card);
         });
+}
+
+function generateDummyImage(name) {
+    const hash = name.split('').reduce((sum, c) => sum + c.charCodeAt(0), 0);
+    const color = (hash % 16777215).toString(16).padStart(6, '0');
+    return `https://dummyimage.com/400x400/${color}/ffffff&text=${encodeURIComponent(name)}`;
 }
 
 function searchProducts() {
@@ -36,21 +46,22 @@ function searchProducts() {
 }
 
 function stringToColor(str) {
-    let hash = 0;
-    for (let i = 0; i < str.length; i++) {
-        hash = str.charCodeAt(i) + ((hash << 5) - hash);
-    }
-
-    const r = (hash >> 16) & 0xFF;
-    const g = (hash >> 8) & 0xFF;
-    const b = hash & 0xFF;
-
-    // Force light colors by adding 127 and dividing by 2
-    const lightR = Math.floor((r + 255) / 2);
-    const lightG = Math.floor((g + 255) / 2);
-    const lightB = Math.floor((b + 255) / 2);
-
-    return `rgb(${lightR}, ${lightG}, ${lightB})`;
+    // let hash = 0;
+    // for (let i = 0; i < str.length; i++) {
+    //     hash = str.charCodeAt(i) + ((hash << 5) - hash);
+    // }
+    //
+    // const r = (hash >> 16) & 0xFF;
+    // const g = (hash >> 8) & 0xFF;
+    // const b = hash & 0xFF;
+    //
+    // // Force light colors by adding 127 and dividing by 2
+    // const lightR = Math.floor((r + 255) / 2);
+    // const lightG = Math.floor((g + 255) / 2);
+    // const lightB = Math.floor((b + 255) / 2);
+    //
+    // return `rgb(${lightR}, ${lightG}, ${lightB})`;
+    return "white";
 }
 
 async function populateCategories() {
