@@ -38,7 +38,7 @@ async function loadCart() {
             div.className = "list-group-item d-flex justify-content-between align-items-center";
             div.innerHTML = `
                 <div>
-                  <strong>${item.productName}</strong> (Quantity: ${item.quantity})
+                  <strong>${item.name}</strong> (Quantity: ${item.quantity})
                 </div>
                 <div class="d-flex gap-2">
                   <button class="btn btn-sm btn-warning" onclick="updateQuantity('${item.productId}')">Update</button>
