@@ -1,4 +1,40 @@
-﻿async function connectWorld() {
+﻿(async function() {
+    const token = localStorage.getItem("token");
+    if (!token) {
+        console.warn("No token found. Redirecting to signin.");
+        window.location.href = "/signin";
+        return;
+    }
+
+    try {
+        const res = await fetch("/api/auth/me", {
+            method: "GET",
+            headers: {
+                "Authorization": "Bearer " + token
+            }
+        });
+
+        if (!res.ok) {
+            console.warn("Failed to authenticate. Redirecting.");
+            window.location.href = "/signin";
+            return;
+        }
+
+        const data = await res.json();
+        if (data.role !== "ROLE_ADMIN" && data.role !== "ADMIN") {
+            console.warn("Not an admin. Redirecting.");
+            window.location.href = "/catalog";
+            return;
+        }
+
+        console.log("Admin user confirmed. Access granted.");
+    } catch (err) {
+        console.error("Error during auth check:", err);
+        window.location.href = "/signin";
+    }
+})();
+
+async function connectWorld() {
     const host = document.getElementById("connectHost").value || "localhost";
     const port = document.getElementById("connectPort").value || 23456;
     const worldId = document.getElementById("connectWorldId").value;
