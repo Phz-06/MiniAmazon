@@ -11,27 +11,19 @@ services:
       - '5432:5432'
     volumes:
       - data-volume:/var/lib/postgresql/data
-
   web:
     build:
       context: .
       dockerfile: Dockerfile
     volumes:
       - ./src/main/resources:/app/src/main/resources
+    ports:
+      - "8000:8000"
     environment:
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/mydatabase
       SPRING_DATASOURCE_USERNAME: amazonuser
       SPRING_DATASOURCE_PASSWORD: ERSSIG3
     depends_on:
       - postgres
-
-  nginx:
-    image: nginx:latest
-    ports:
-      - "8000:8000"
-    volumes:
-      - ./nginx/config:/etc/nginx/conf.d
-    depends_on:
-      - web
 volumes:
   data-volume:
