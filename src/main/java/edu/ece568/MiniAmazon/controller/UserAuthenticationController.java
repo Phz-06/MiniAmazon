@@ -67,7 +67,7 @@ public class UserAuthenticationController {
         return ResponseEntity.ok(new JwtResponse(jwtTokenUtils.generateToken(request.getUsername())));
     }
 
-    @GetMapping("/api/auth/me")
+    @GetMapping("/me")
     public ResponseEntity<Map<String, String>> me(Authentication authentication) {
         if (authentication == null || !authentication.isAuthenticated()) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
