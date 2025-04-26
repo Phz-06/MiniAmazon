@@ -21,23 +21,20 @@ function logout() {
 
 document.addEventListener("DOMContentLoaded", function() {
     const token = localStorage.getItem("token");
-    if (token) {
-        const payload = Utils.parseJwt(token);
-        if (payload) {
-            // Set username
-            const userNameSpan = document.getElementById("userName");
-            if (userNameSpan) {
-                userNameSpan.textContent = payload.username || "User";
-            }
+    if (!token) return;
 
-            // Show admin button if user is admin
-            if (payload.role === "ADMIN") {
-                const adminButton = document.getElementById("adminButton");
-                if (adminButton) {
-                    adminButton.classList.remove("d-none");
-                }
-            }
-        }
+    const payload = Utils.parseJwt(token);
+    if (!payload) return;
+
+    // Safe wait until userName and adminButton actually appear
+    const userNameSpan = document.getElementById("userName");
+    const adminButton = document.getElementById("adminButton");
+
+    if (userNameSpan) {
+        userNameSpan.textContent = payload.username || "User";
+    }
+
+    if (adminButton && payload.role === "ADMIN") {
+        adminButton.classList.remove("d-none");
     }
 });
-
