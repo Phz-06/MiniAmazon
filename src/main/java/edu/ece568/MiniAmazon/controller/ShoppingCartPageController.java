@@ -5,7 +5,7 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 
 @Controller
-public class CartPageController {
+public class ShoppingCartPageController {
     @GetMapping("/cart")
     public String indexPage(Model model) {
         model.addAttribute("title", "Mini-Amazon Cart");
