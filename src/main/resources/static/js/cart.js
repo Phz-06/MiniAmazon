@@ -120,38 +120,8 @@ async function clearCart() {
     }
 }
 
-async function checkout() {
-    const deliveryX = prompt("Enter delivery X coordinate:");
-    const deliveryY = prompt("Enter delivery Y coordinate:");
-    const upsAccountName = prompt("Enter your UPS account name:");
-
-    if (!deliveryX || !deliveryY || !upsAccountName) {
-        alert("All fields are required.");
-        return;
-    }
-
-    try {
-        const res = await fetch("/api/cart/checkout", {
-            method: "POST",
-            headers: getAuthHeaders(),
-            body: JSON.stringify({
-                deliveryX: parseInt(deliveryX),
-                deliveryY: parseInt(deliveryY),
-                upsAccountName
-            })
-        });
-
-        if (!res.ok) {
-            alert("Failed to checkout.");
-            return;
-        }
-
-        alert("Order placed successfully!");
-        window.location.href = "/"; // 👈 redirect to home or catalog
-    } catch (err) {
-        console.error(err);
-        alert("Error during checkout.");
-    }
+function checkout() {
+    window.location.href = "/checkout";
 }
 
 function logout() {
