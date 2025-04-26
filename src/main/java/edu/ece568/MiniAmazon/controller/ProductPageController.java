@@ -1,4 +1,4 @@
-﻿package edu.ece568.MiniAmazon.controller;
+package edu.ece568.MiniAmazon.controller;
 
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
