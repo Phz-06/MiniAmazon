@@ -30,7 +30,7 @@ function isSignedIn() {
 
 // Redirect to "/" if already signed in
 if (isSignedIn()) {
-    window.location.href = "/";
+    window.location.href = window.location.origin + "/";
 }
 
 document.getElementById("signinForm").addEventListener("submit", async function(event) {

@@ -43,7 +43,7 @@
 
         const data = await res.json();
         localStorage.setItem("token", data.token); // Store JWT in local storage
-        window.location.href = "/signin"; // Redirect to sign-in page
+        window.location.href = window.location.origin + "/signin"; // Redirect to sign-in page
     } catch (err) {
         console.error(err)
         alert("Error when registering. Please try again later.");
