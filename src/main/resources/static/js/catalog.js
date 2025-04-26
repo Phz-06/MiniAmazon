@@ -1,4 +1,6 @@
-﻿async function loadProducts() {
+﻿let searchTimeout = null;
+
+async function loadProducts() {
     const category = document.getElementById("categoryFilter").value;
     const query = document.getElementById("searchInput").value.toLowerCase();
 
@@ -26,6 +28,11 @@
           `;
             list.appendChild(card);
         });
+}
+
+function searchProducts() {
+    if (searchTimeout) clearTimeout(searchTimeout);
+    searchTimeout = setTimeout(loadProducts, 300);
 }
 
 function stringToColor(str) {
