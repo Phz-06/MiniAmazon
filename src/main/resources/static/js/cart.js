@@ -25,11 +25,11 @@ async function loadCart() {
         }
 
         const data = await res.json();
-        const cartItems = document.getElementById("cartItems");
-        cartItems.innerHTML = "";
+        const cartItemsDiv = document.getElementById("cartItems");
+        cartItemsDiv.innerHTML = "";
 
         if (!data.cartItems || data.cartItems.length === 0) {
-            cartItems.innerHTML = "<div class='text-muted'>Your cart is empty.</div>";
+            cartItemsDiv.innerHTML = "<div class='text-muted'>Your cart is empty.</div>";
             return;
         }
 
@@ -38,14 +38,14 @@ async function loadCart() {
             div.className = "list-group-item d-flex justify-content-between align-items-center";
             div.innerHTML = `
                 <div>
-                  <strong>${item.name}</strong> (Quantity: ${item.quantity})
+                  <strong>${item.product.name}</strong> (Quantity: ${item.quantity})
                 </div>
                 <div class="d-flex gap-2">
-                  <button class="btn btn-sm btn-warning" onclick="updateQuantity('${item.productId}')">Update</button>
-                  <button class="btn btn-sm btn-danger" onclick="removeItem('${item.productId}')">Remove</button>
+                  <button class="btn btn-sm btn-warning" onclick="updateQuantity('${item.product.id}')">Update</button>
+                  <button class="btn btn-sm btn-danger" onclick="removeItem('${item.product.id}')">Remove</button>
                 </div>
             `;
-            cartItems.appendChild(div);
+            cartItemsDiv.appendChild(div);
         }
     } catch (err) {
         console.error(err);
