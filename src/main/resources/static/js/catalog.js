@@ -33,10 +33,17 @@ function stringToColor(str) {
     for (let i = 0; i < str.length; i++) {
         hash = str.charCodeAt(i) + ((hash << 5) - hash);
     }
-    const color = '#' + ((hash >> 24 & 0xFF) + 128).toString(16).padStart(2, '0') +
-        ((hash >> 16 & 0xFF) + 128).toString(16).padStart(2, '0') +
-        ((hash >> 8 & 0xFF) + 128).toString(16).padStart(2, '0');
-    return color;
+
+    const r = (hash >> 16) & 0xFF;
+    const g = (hash >> 8) & 0xFF;
+    const b = hash & 0xFF;
+
+    // Force light colors by adding 127 and dividing by 2
+    const lightR = Math.floor((r + 255) / 2);
+    const lightG = Math.floor((g + 255) / 2);
+    const lightB = Math.floor((b + 255) / 2);
+
+    return `rgb(${lightR}, ${lightG}, ${lightB})`;
 }
 
 async function populateCategories() {
