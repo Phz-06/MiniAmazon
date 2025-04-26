@@ -15,14 +15,14 @@ async function loadProducts() {
         .filter(p => (!category || p.category === category))
         .filter(p => p.name.toLowerCase().includes(query) || p.description.toLowerCase().includes(query))
         .forEach(p => {
-            const color = stringToColor(p.name);
+            const color = "white";
             const imgUrl = generateDummyImage(p.name);
 
             const card = document.createElement("div");
             card.className = "col";
 
             card.innerHTML = `
-            <div class="card h-100 shadow-sm" style="background-color: ${color}; cursor: pointer;" onclick="goToProduct(${p.productId})">
+            <div class="card h-100 shadow-sm" style="background-color: ${color}; cursor: pointer;" onclick="goToProduct(${p.id})">
               <img src="${imgUrl}" class="card-img-top" alt="${p.name}" style="object-fit: cover; height: 200px;">
               <div class="card-body d-flex flex-column">
                 <h5 class="card-title">${p.name}</h5>
@@ -52,25 +52,6 @@ function goToProduct(id) {
         return;
     }
     window.location.href = `/product/${id}`;
-}
-
-function stringToColor(str) {
-    // let hash = 0;
-    // for (let i = 0; i < str.length; i++) {
-    //     hash = str.charCodeAt(i) + ((hash << 5) - hash);
-    // }
-    //
-    // const r = (hash >> 16) & 0xFF;
-    // const g = (hash >> 8) & 0xFF;
-    // const b = hash & 0xFF;
-    //
-    // // Force light colors by adding 127 and dividing by 2
-    // const lightR = Math.floor((r + 255) / 2);
-    // const lightG = Math.floor((g + 255) / 2);
-    // const lightB = Math.floor((b + 255) / 2);
-    //
-    // return `rgb(${lightR}, ${lightG}, ${lightB})`;
-    return "white";
 }
 
 async function populateCategories() {
