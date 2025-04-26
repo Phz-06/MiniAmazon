@@ -4,8 +4,8 @@ services:
     image: postgres:latest
     environment:
       - POSTGRES_DB=amazon
-      - POSTGRES_PASSWORD=whatever
-      - POSTGRES_USER=1298dh_9182@hd1
+      - POSTGRES_PASSWORD=ERSSIG3
+      - POSTGRES_USER=amazonuser
     volumes:
       - data-volume:/var/lib/postgresql/data
     ports:
@@ -19,8 +19,8 @@ services:
       - "8000:8000"
     environment:
       - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/amazon
-      - SPRING_DATASOURCE_USERNAME=whatever
-      - SPRING_DATASOURCE_PASSWORD=1298dh_9182@hd1
+      - SPRING_DATASOURCE_USERNAME=amazonuser
+      - SPRING_DATASOURCE_PASSWORD=ERSSIG3
       - WORLD_HOST=host.docker.internal
       - WORLD_PORT=23456
     extra_hosts:
