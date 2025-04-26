@@ -1,13 +1,11 @@
-﻿import { parseJwt } from './utils.js';
-
-(function() {
+﻿(function() {
     const token = localStorage.getItem("token");
     if (!token) {
         window.location.href = "/catalog";
         return;
     }
 
-    const payload = parseJwt(token);
+    const payload = Utils.parseJwt(token);
     if (!payload || !payload.role) {
         window.location.href = "/catalog";
         return;

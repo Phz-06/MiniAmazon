@@ -1,11 +1,9 @@
-﻿import { parseJwt } from './utils.js';
-
-function isSignedIn() {
+﻿function isSignedIn() {
     const token = localStorage.getItem("token");
     if (!token) {
         return false;
     }
-    const payload = parseJwt(token);
+    const payload = Utils.parseJwt(token);
     if (!payload || !payload.exp) {
         return false;
     }
