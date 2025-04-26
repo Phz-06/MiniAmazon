@@ -41,8 +41,8 @@ async function loadCart() {
                   <strong>${item.product.name}</strong> (Quantity: ${item.quantity})
                 </div>
                 <div class="d-flex gap-2">
-                  <button class="btn btn-sm btn-warning" onclick="updateQuantity('${item.product.id}')">Update</button>
-                  <button class="btn btn-sm btn-danger" onclick="removeItem('${item.product.id}')">Remove</button>
+                  <button class="btn btn-sm btn-warning" onclick="updateQuantity('${item.product.productID}')">Update</button>
+                  <button class="btn btn-sm btn-danger" onclick="removeItem('${item.product.productID}')">Remove</button>
                 </div>
             `;
             cartItemsDiv.appendChild(div);
@@ -55,7 +55,9 @@ async function loadCart() {
 
 async function updateQuantity(productId) {
     const quantity = prompt("Enter new quantity:");
-    if (!quantity) return;
+    if (!quantity) {
+        return;
+    }
 
     try {
         const res = await fetch("/api/cart/update", {
@@ -96,7 +98,9 @@ async function removeItem(productId) {
 }
 
 async function clearCart() {
-    if (!confirm("Are you sure you want to clear your cart?")) return;
+    if (!confirm("Are you sure you want to clear your cart?")) {
+        return;
+    }
 
     try {
         const res = await fetch("/api/cart/clear", {
