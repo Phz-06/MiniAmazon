@@ -15,7 +15,10 @@
 
 <body>
   <!-- Page Content -->
-  <div th:if="${template} != null and ${fragment} != null" th:replace="~{${template} :: ${fragment}}"></div>
+  <div th:if="${template != null} and ${fragment != null}"
+       th:replace="~{${template} :: ${fragment}}">
+  </div>
+  <div th:if="${template == null} or ${fragment == null}"></div>
 
   <!-- Page Script -->
   <script th:src="@{/js/utils.js}"></script>
