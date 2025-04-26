@@ -6,8 +6,8 @@ import org.springframework.web.bind.annotation.GetMapping;
 
 @Controller
 public class CatalogPageController {
-    @GetMapping("/")
-    public String catalogPage(Model model) {
+    @GetMapping("/catalog")
+    public String indexPage(Model model) {
         model.addAttribute("title", "Mini-Amazon");
         model.addAttribute("template", "catalog");
         model.addAttribute("fragment", "content");
