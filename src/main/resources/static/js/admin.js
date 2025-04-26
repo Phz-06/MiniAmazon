@@ -1,4 +1,15 @@
-﻿(async function() {
+﻿function clearStatusMsgs() {
+    document.getElementById("connectStatus").innerText = "";
+    document.getElementById("disconnectStatus").innerText = "";
+    document.getElementById("speedStatus").innerText = "";
+    document.getElementById("buyStatus").innerText = "";
+    document.getElementById("packStatus").innerText = "";
+    document.getElementById("loadStatus").innerText = "";
+    document.getElementById("queryStatus").innerText = "";
+    document.getElementById("worldIdStatus").innerText = "";
+}
+
+(async function() {
     const token = localStorage.getItem("token");
     if (!token) {
         console.warn("No token found. Redirecting to signin.");
@@ -38,6 +49,8 @@ function getAuthHeaders() {
 }
 
 async function connectWorld() {
+    clearStatusMsgs();
+
     const host = document.getElementById("connectHost").value || "localhost";
     const port = document.getElementById("connectPort").value || 23456;
     const worldId = document.getElementById("connectWorldId").value;
@@ -58,6 +71,8 @@ async function connectWorld() {
 }
 
 async function disconnectWorld() {
+    clearStatusMsgs();
+
     try {
         const res = await fetch("/api/world/disconnect", {
             method: "POST",
@@ -72,6 +87,8 @@ async function disconnectWorld() {
 }
 
 async function setSpeed() {
+    clearStatusMsgs();
+
     const speed = document.getElementById("speedInput").value;
     try {
         const res = await fetch("/api/world/speed?speed=" + encodeURIComponent(speed), {
@@ -87,6 +104,8 @@ async function setSpeed() {
 }
 
 async function buyProduct() {
+    clearStatusMsgs();
+
     const warehouseId = document.getElementById("buyWarehouseId").value;
     const productId = document.getElementById("buyProductId").value;
     const description = document.getElementById("buyDescription").value;
@@ -107,6 +126,8 @@ async function buyProduct() {
 }
 
 async function packOrder() {
+    clearStatusMsgs();
+
     const warehouseId = document.getElementById("packWarehouseId").value;
     const shipmentId = document.getElementById("packShipmentId").value;
     const productsJson = document.getElementById("packProducts").value;
@@ -134,6 +155,8 @@ async function packOrder() {
 }
 
 async function loadPackage() {
+    clearStatusMsgs();
+
     const warehouseId = document.getElementById("loadWarehouseId").value;
     const truckId = document.getElementById("loadTruckId").value;
     const shipmentId = document.getElementById("loadShipmentId").value;
@@ -154,6 +177,8 @@ async function loadPackage() {
 }
 
 async function queryPackage() {
+    clearStatusMsgs();
+
     const packageId = document.getElementById("queryPackageId").value;
 
     try {
@@ -170,6 +195,8 @@ async function queryPackage() {
 }
 
 async function getWorldId() {
+    clearStatusMsgs();
+
     try {
         const res = await fetch("/api/world/id", {
             method: "GET",
