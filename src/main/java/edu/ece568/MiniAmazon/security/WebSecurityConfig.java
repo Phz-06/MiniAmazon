@@ -46,6 +46,7 @@ public class WebSecurityConfig {
                                 "/",
                                 "/signin",
                                 "/register",
+                                "/catalog",
                                 "/css/**",
                                 "/js/**",
                                 "/images/**",
