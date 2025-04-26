@@ -11,13 +11,13 @@ public class IndexPageController {
     public String indexPage(Authentication authentication) {
         String baseUrl = ServletUriComponentsBuilder.fromCurrentContextPath().build().toUriString();
 
+        // TODO: Delete print
+        System.out.println("************************************* Current user authorities: " + authentication.getAuthorities());
+
         // If not logged in, redirect to "/catalog"
         if (authentication == null || !authentication.isAuthenticated()) {
             return "redirect:" + baseUrl + "/catalog";
         }
-
-        // TODO: Delete print
-        System.out.println("************************************* Current user authorities: " + authentication.getAuthorities());
 
         // Redirect to "/admin" for admins, "catalog" otherwise
         boolean isAdmin = authentication.getAuthorities().stream()
