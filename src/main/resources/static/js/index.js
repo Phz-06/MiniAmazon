@@ -1,6 +1,7 @@
 ﻿(async function() {
     const token = localStorage.getItem("token");
     if (!token) {
+        console.log("No token found.");
         window.location.href = "/catalog";
         return;
     }
@@ -14,18 +15,21 @@
         });
 
         if (!res.ok) {
+            console.log("Unauthorized or invalid token.");
             window.location.href = "/catalog";
             return;
         }
 
         const data = await res.json();
-        if (data.role === "ROLE_ADMIN") {
+        console.log("Fetched user info:", data);
+
+        if (data.role === "ROLE_ADMIN" || data.role === "ADMIN" || data.role === "ROLE_ADMIN") {
             window.location.href = "/admin";
         } else {
             window.location.href = "/catalog";
         }
     } catch (err) {
-        console.error(err);
+        console.error("Error fetching user info:", err);
         window.location.href = "/catalog";
     }
 })();
