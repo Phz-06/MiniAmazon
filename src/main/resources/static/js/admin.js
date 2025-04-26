@@ -9,9 +9,7 @@
     try {
         const res = await fetch("/api/auth/me", {
             method: "GET",
-            headers: {
-                "Authorization": "Bearer " + token
-            }
+            headers: { "Authorization": "Bearer " + token }
         });
 
         if (!res.ok) {
@@ -34,44 +32,57 @@
     }
 })();
 
+function getAuthHeaders() {
+    const token = localStorage.getItem("token");
+    return { "Authorization": "Bearer " + token };
+}
+
 async function connectWorld() {
     const host = document.getElementById("connectHost").value || "localhost";
     const port = document.getElementById("connectPort").value || 23456;
     const worldId = document.getElementById("connectWorldId").value;
-
     const params = new URLSearchParams({ host, port });
     if (worldId) params.append("worldId", worldId);
 
     try {
-        const res = await fetch("/api/world/connect?" + params.toString(), { method: "POST" });
+        const res = await fetch("/api/world/connect?" + params.toString(), {
+            method: "POST",
+            headers: getAuthHeaders()
+        });
         const data = await res.json();
         document.getElementById("connectStatus").innerText = res.ok ? "Connected! World ID: " + data.worldId : "Failed to connect.";
     } catch (err) {
         console.error(err);
-        document.getElementById("connectStatus").innerText = "Error connecting.";
+        alert("Error connecting.");
     }
 }
 
 async function disconnectWorld() {
     try {
-        const res = await fetch("/api/world/disconnect", { method: "POST" });
+        const res = await fetch("/api/world/disconnect", {
+            method: "POST",
+            headers: getAuthHeaders()
+        });
         const data = await res.json();
         document.getElementById("disconnectStatus").innerText = res.ok ? "Disconnected!" : "Not connected.";
     } catch (err) {
         console.error(err);
-        document.getElementById("disconnectStatus").innerText = "Error disconnecting.";
+        alert("Error disconnecting.");
     }
 }
 
 async function setSpeed() {
     const speed = document.getElementById("speedInput").value;
     try {
-        const res = await fetch("/api/world/speed?speed=" + encodeURIComponent(speed), { method: "POST" });
+        const res = await fetch("/api/world/speed?speed=" + encodeURIComponent(speed), {
+            method: "POST",
+            headers: getAuthHeaders()
+        });
         const data = await res.json();
         document.getElementById("speedStatus").innerText = res.ok ? "Speed set to " + data.speed : "Failed to set speed.";
     } catch (err) {
         console.error(err);
-        document.getElementById("speedStatus").innerText = "Error setting speed.";
+        alert("Error setting speed.");
     }
 }
 
@@ -80,16 +91,18 @@ async function buyProduct() {
     const productId = document.getElementById("buyProductId").value;
     const description = document.getElementById("buyDescription").value;
     const count = document.getElementById("buyCount").value;
-
     const params = new URLSearchParams({ warehouseId, productId, description, count });
 
     try {
-        const res = await fetch("/api/world/buy?" + params.toString(), { method: "POST" });
+        const res = await fetch("/api/world/buy?" + params.toString(), {
+            method: "POST",
+            headers: getAuthHeaders()
+        });
         const data = await res.json();
         document.getElementById("buyStatus").innerText = res.ok ? "Product bought! SeqNum: " + data.seqNum : "Failed to buy.";
     } catch (err) {
         console.error(err);
-        document.getElementById("buyStatus").innerText = "Error buying product.";
+        alert("Error buying product.");
     }
 }
 
@@ -109,14 +122,14 @@ async function packOrder() {
     try {
         const res = await fetch("/api/world/pack?warehouseId=" + warehouseId + "&shipmentId=" + shipmentId, {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
+            headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
             body: JSON.stringify(products)
         });
         const data = await res.json();
         document.getElementById("packStatus").innerText = res.ok ? "Order packed! SeqNum: " + data.seqNum : "Failed to pack.";
     } catch (err) {
         console.error(err);
-        document.getElementById("packStatus").innerText = "Error packing order.";
+        alert("Error packing order.");
     }
 }
 
@@ -128,12 +141,15 @@ async function loadPackage() {
     const params = new URLSearchParams({ warehouseId, truckId, shipmentId });
 
     try {
-        const res = await fetch("/api/world/load?" + params.toString(), { method: "POST" });
+        const res = await fetch("/api/world/load?" + params.toString(), {
+            method: "POST",
+            headers: getAuthHeaders()
+        });
         const data = await res.json();
         document.getElementById("loadStatus").innerText = res.ok ? "Package loaded! SeqNum: " + data.seqNum : "Failed to load.";
     } catch (err) {
         console.error(err);
-        document.getElementById("loadStatus").innerText = "Error loading package.";
+        alert("Error loading package.");
     }
 }
 
@@ -141,23 +157,29 @@ async function queryPackage() {
     const packageId = document.getElementById("queryPackageId").value;
 
     try {
-        const res = await fetch("/api/world/package/" + packageId);
+        const res = await fetch("/api/world/package/" + packageId, {
+            method: "GET",
+            headers: getAuthHeaders()
+        });
         const data = await res.json();
         document.getElementById("queryStatus").innerText = res.ok ? "Query sent! SeqNum: " + data.seqNum : "Failed to query.";
     } catch (err) {
         console.error(err);
-        document.getElementById("queryStatus").innerText = "Error querying package.";
+        alert("Error querying package.");
     }
 }
 
 async function getWorldId() {
     try {
-        const res = await fetch("/api/world/id");
+        const res = await fetch("/api/world/id", {
+            method: "GET",
+            headers: getAuthHeaders()
+        });
         const data = await res.json();
         document.getElementById("worldIdStatus").innerText = res.ok ? "World ID: " + data.worldId : "Failed to get world ID.";
     } catch (err) {
         console.error(err);
-        document.getElementById("worldIdStatus").innerText = "Error getting world ID.";
+        alert("Error getting world ID.");
     }
 }
 
@@ -165,4 +187,3 @@ function logout() {
     localStorage.removeItem("token");
     window.location.href = "/signin";
 }
-
