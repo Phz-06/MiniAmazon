@@ -45,9 +45,12 @@ function logout() {
 }
 
 function getProductIdFromUrl() {
-    const path = window.location.pathname;
-    const match = path.match("/\\/product\\/(\\d+)/");
-    return match ? match[1] : null;
+    const parts = window.location.pathname.split("/");
+    const id = parts[2]; // /product/{id}
+    if (!id || isNaN(id)) {
+        return null;
+    }
+    return id;
 }
 
 function generateDummyImage(name) {

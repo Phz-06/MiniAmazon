@@ -47,6 +47,10 @@ function searchProducts() {
 }
 
 function goToProduct(id) {
+    if (!id) {
+        alert("Invalid product ID.");
+        return;
+    }
     window.location.href = `/product/${id}`;
 }
 
