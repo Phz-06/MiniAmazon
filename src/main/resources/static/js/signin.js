@@ -57,7 +57,7 @@ document.getElementById("signinForm").addEventListener("submit", async function(
 
         const data = await res.json();
         localStorage.setItem("token", data.token); // Store JWT in local storage
-        window.location.href = "/"; // Redirect to main page
+        window.location.href = window.location.origin + "/"; // Redirect to main page
     } catch (err) {
         console.error(err);
         alert("Error when signing in. Please try again later.")
