@@ -210,6 +210,105 @@ async function getWorldId() {
     }
 }
 
+async function connectUPS() {
+    clearStatusMsgs();
+    const host = document.getElementById("upsHost").value;
+    const port = document.getElementById("upsPort").value;
+
+    try {
+        const res = await fetch("/api/admin/ups/connect", {
+            method: "POST",
+            headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
+            body: JSON.stringify({ host, port: port ? parseInt(port) : undefined })
+        });
+        const data = await res.json();
+        document.getElementById("upsStatus").innerText = data.message || "Unknown result.";
+    } catch (err) {
+        console.error(err);
+        alert("Error connecting to UPS.");
+    }
+}
+
+async function connectUPSDefault() {
+    clearStatusMsgs();
+
+    try {
+        const res = await fetch("/api/admin/ups/connect/default", {
+            method: "POST",
+            headers: getAuthHeaders()
+        });
+        const data = await res.json();
+        document.getElementById("upsStatus").innerText = data.message || "Unknown result.";
+    } catch (err) {
+        console.error(err);
+        alert("Error connecting with default UPS settings.");
+    }
+}
+
+async function disconnectUPS() {
+    clearStatusMsgs();
+
+    try {
+        const res = await fetch("/api/admin/ups/disconnect", {
+            method: "POST",
+            headers: getAuthHeaders()
+        });
+        const data = await res.json();
+        document.getElementById("upsStatus").innerText = data.message || "Unknown result.";
+    } catch (err) {
+        console.error(err);
+        alert("Error disconnecting from UPS.");
+    }
+}
+
+async function checkUPSStatus() {
+    clearStatusMsgs();
+
+    try {
+        const res = await fetch("/api/admin/ups/status", {
+            method: "GET",
+            headers: getAuthHeaders()
+        });
+        const data = await res.json();
+        document.getElementById("upsStatus").innerText = `Connected: ${data.connected}, Server Running: ${data.serverRunning}, Client Connected: ${data.upsClientConnected}`;
+    } catch (err) {
+        console.error(err);
+        alert("Error checking UPS status.");
+    }
+}
+
+async function startUPSServer() {
+    clearStatusMsgs();
+
+    try {
+        const res = await fetch("/api/admin/ups/server/start", {
+            method: "POST",
+            headers: getAuthHeaders()
+        });
+        const data = await res.json();
+        document.getElementById("upsStatus").innerText = data.message || "Unknown result.";
+    } catch (err) {
+        console.error(err);
+        alert("Error starting UPS server.");
+    }
+}
+
+async function stopUPSServer() {
+    clearStatusMsgs();
+
+    try {
+        const res = await fetch("/api/admin/ups/server/stop", {
+            method: "POST",
+            headers: getAuthHeaders()
+        });
+        const data = await res.json();
+        document.getElementById("upsStatus").innerText = data.message || "Unknown result.";
+    } catch (err) {
+        console.error(err);
+        alert("Error stopping UPS server.");
+    }
+}
+
 function logout() {
     localStorage.removeItem("token");
     window.location.href = "/signin";

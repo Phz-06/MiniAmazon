@@ -139,4 +139,43 @@
       </div>
     </div>
   </div>
+
+  <!-- UPS Control Panel -->
+  <div class="card mb-4">
+    <div class="card-body">
+      <h5 class="card-title">UPS Server Control</h5>
+
+      <div class="row g-2 mb-3">
+        <div class="col-md-4">
+          <input type="text" id="upsHost" class="form-control" placeholder="Host (default localhost)">
+        </div>
+        <div class="col-md-4">
+          <input type="number" id="upsPort" class="form-control" placeholder="Port (optional)">
+        </div>
+        <div class="col-md-4 d-grid">
+          <button class="btn btn-success" onclick="connectUPS()">Connect to UPS</button>
+        </div>
+      </div>
+
+      <div class="d-grid gap-2 mb-3">
+        <button class="btn btn-secondary" onclick="connectUPSDefault()">Connect with Default Settings</button>
+        <button class="btn btn-danger" onclick="disconnectUPS()">Disconnect from UPS</button>
+      </div>
+
+      <div class="row g-2 mb-3">
+        <div class="col-md-6 d-grid">
+          <button class="btn btn-primary" onclick="startUPSServer()">Start UPS Server</button>
+        </div>
+        <div class="col-md-6 d-grid">
+          <button class="btn btn-warning" onclick="stopUPSServer()">Stop UPS Server</button>
+        </div>
+      </div>
+
+      <div class="d-grid">
+        <button class="btn btn-info" onclick="checkUPSStatus()">Check UPS Connection Status</button>
+      </div>
+
+      <div id="upsStatus" class="mt-2 text-muted small"></div>
+    </div>
+  </div>
 </div>
