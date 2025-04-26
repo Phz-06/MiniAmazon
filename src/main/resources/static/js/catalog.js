@@ -60,12 +60,14 @@ async function populateCategories() {
     const categories = data.categories;
     const select = document.getElementById("categoryFilter");
 
-    categories.forEach(c => {
-        const option = document.createElement("option");
-        option.value = c;
-        option.textContent = c;
-        select.appendChild(option);
-    });
+    if (select != null) {
+        categories.forEach(c => {
+            const option = document.createElement("option");
+            option.value = c;
+            option.textContent = c;
+            select.appendChild(option);
+        });
+    }
 }
 
 async function init() {

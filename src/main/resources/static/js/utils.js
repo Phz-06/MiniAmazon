@@ -19,7 +19,7 @@ function logout() {
     window.location.href = "/signin";
 }
 
-(function() {
+document.addEventListener("DOMContentLoaded", function() {
     const token = localStorage.getItem("token");
     if (token) {
         const payload = Utils.parseJwt(token);
@@ -39,5 +39,5 @@ function logout() {
             }
         }
     }
-})();
+});
 
