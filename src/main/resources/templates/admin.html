@@ -1,5 +1,5 @@
 ﻿<div th:fragment="content">
-  <!-- Admin Navbar -->
+  <!-- Admin Dashboard Navbar -->
   <nav class="navbar navbar-expand-lg navbar-dark bg-dark px-3">
     <a class="navbar-brand d-flex align-items-center" href="#">
       <i class="bi bi-speedometer2"></i> &nbsp; Admin Dashboard
@@ -9,38 +9,132 @@
     </div>
   </nav>
 
-  <!-- Admin Content -->
+  <!-- Admin Dashboard Content -->
   <div class="container mt-4">
-    <h2 class="mb-4">Admin Control Panel</h2>
-    <div class="row g-4">
-      <div class="col-md-4">
-        <div class="card shadow-sm h-100">
-          <div class="card-body">
-            <h5 class="card-title"><i class="bi bi-box-seam"></i> Manage Products</h5>
-            <p class="card-text">Add, update, and delete products in the catalog.</p>
-            <a href="/admin/products" class="btn btn-primary">Go</a>
-          </div>
-        </div>
-      </div>
+    <h2 class="mb-4">World Simulator Control Panel</h2>
 
-      <div class="col-md-4">
-        <div class="card shadow-sm h-100">
-          <div class="card-body">
-            <h5 class="card-title"><i class="bi bi-cart-check"></i> Manage Orders</h5>
-            <p class="card-text">View and process customer orders.</p>
-            <a href="/admin/orders" class="btn btn-primary">Go</a>
+    <!-- Connect to World -->
+    <div class="card mb-4">
+      <div class="card-body">
+        <h5 class="card-title">Connect to World</h5>
+        <div class="row g-2">
+          <div class="col-md-4">
+            <input type="text" id="connectHost" class="form-control" placeholder="Host (default localhost)">
+          </div>
+          <div class="col-md-2">
+            <input type="number" id="connectPort" class="form-control" placeholder="Port (default 23456)">
+          </div>
+          <div class="col-md-4">
+            <input type="text" id="connectWorldId" class="form-control" placeholder="World ID (optional)">
+          </div>
+          <div class="col-md-2">
+            <button class="btn btn-success w-100" onclick="connectWorld()">Connect</button>
           </div>
         </div>
+        <div id="connectStatus" class="mt-2 text-muted small"></div>
       </div>
+    </div>
 
-      <div class="col-md-4">
-        <div class="card shadow-sm h-100">
-          <div class="card-body">
-            <h5 class="card-title"><i class="bi bi-people"></i> Manage Users</h5>
-            <p class="card-text">View and manage registered users.</p>
-            <a href="/admin/users" class="btn btn-primary">Go</a>
+    <!-- Disconnect -->
+    <div class="card mb-4">
+      <div class="card-body">
+        <h5 class="card-title">Disconnect from World</h5>
+        <button class="btn btn-danger" onclick="disconnectWorld()">Disconnect</button>
+        <div id="disconnectStatus" class="mt-2 text-muted small"></div>
+      </div>
+    </div>
+
+    <!-- Set Speed -->
+    <div class="card mb-4">
+      <div class="card-body">
+        <h5 class="card-title">Set Simulation Speed</h5>
+        <div class="input-group">
+          <input type="number" id="speedInput" class="form-control" placeholder="Speed">
+          <button class="btn btn-primary" onclick="setSpeed()">Set Speed</button>
+        </div>
+        <div id="speedStatus" class="mt-2 text-muted small"></div>
+      </div>
+    </div>
+
+    <!-- Buy Product -->
+    <div class="card mb-4">
+      <div class="card-body">
+        <h5 class="card-title">Buy Product</h5>
+        <div class="row g-2">
+          <div class="col-md-3">
+            <input type="number" id="buyWarehouseId" class="form-control" placeholder="Warehouse ID">
+          </div>
+          <div class="col-md-3">
+            <input type="number" id="buyProductId" class="form-control" placeholder="Product ID">
+          </div>
+          <div class="col-md-4">
+            <input type="text" id="buyDescription" class="form-control" placeholder="Description">
+          </div>
+          <div class="col-md-2">
+            <input type="number" id="buyCount" class="form-control" placeholder="Count">
           </div>
         </div>
+        <button class="btn btn-primary mt-2" onclick="buyProduct()">Buy</button>
+        <div id="buyStatus" class="mt-2 text-muted small"></div>
+      </div>
+    </div>
+
+    <!-- Pack Order -->
+    <div class="card mb-4">
+      <div class="card-body">
+        <h5 class="card-title">Pack Order</h5>
+        <div class="row g-2 mb-2">
+          <div class="col-md-4">
+            <input type="number" id="packWarehouseId" class="form-control" placeholder="Warehouse ID">
+          </div>
+          <div class="col-md-4">
+            <input type="number" id="packShipmentId" class="form-control" placeholder="Shipment ID">
+          </div>
+        </div>
+        <textarea id="packProducts" class="form-control" rows="3" placeholder='Products JSON (example: [[1, 2, "desc"], [2, 3, "desc2"]])'></textarea>
+        <button class="btn btn-primary mt-2" onclick="packOrder()">Pack</button>
+        <div id="packStatus" class="mt-2 text-muted small"></div>
+      </div>
+    </div>
+
+    <!-- Load Package -->
+    <div class="card mb-4">
+      <div class="card-body">
+        <h5 class="card-title">Load Package</h5>
+        <div class="row g-2">
+          <div class="col-md-3">
+            <input type="number" id="loadWarehouseId" class="form-control" placeholder="Warehouse ID">
+          </div>
+          <div class="col-md-3">
+            <input type="number" id="loadTruckId" class="form-control" placeholder="Truck ID">
+          </div>
+          <div class="col-md-3">
+            <input type="number" id="loadShipmentId" class="form-control" placeholder="Shipment ID">
+          </div>
+        </div>
+        <button class="btn btn-primary mt-2" onclick="loadPackage()">Load</button>
+        <div id="loadStatus" class="mt-2 text-muted small"></div>
+      </div>
+    </div>
+
+    <!-- Query Package -->
+    <div class="card mb-4">
+      <div class="card-body">
+        <h5 class="card-title">Query Package</h5>
+        <div class="input-group">
+          <input type="number" id="queryPackageId" class="form-control" placeholder="Package ID">
+          <button class="btn btn-primary" onclick="queryPackage()">Query</button>
+        </div>
+        <div id="queryStatus" class="mt-2 text-muted small"></div>
+      </div>
+    </div>
+
+    <!-- Get World ID -->
+    <div class="card mb-4">
+      <div class="card-body">
+        <h5 class="card-title">Get World ID</h5>
+        <button class="btn btn-info" onclick="getWorldId()">Get</button>
+        <div id="worldIdStatus" class="mt-2 text-muted small"></div>
       </div>
     </div>
   </div>
