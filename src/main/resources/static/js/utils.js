@@ -13,3 +13,31 @@
         }
     }
 }
+
+function logout() {
+    localStorage.removeItem("token");
+    window.location.href = "/signin";
+}
+
+(function() {
+    const token = localStorage.getItem("token");
+    if (token) {
+        const payload = Utils.parseJwt(token);
+        if (payload) {
+            // Set username
+            const userNameSpan = document.getElementById("userName");
+            if (userNameSpan) {
+                userNameSpan.textContent = payload.username || "User";
+            }
+
+            // Show admin button if user is admin
+            if (payload.role === "ADMIN") {
+                const adminButton = document.getElementById("adminButton");
+                if (adminButton) {
+                    adminButton.classList.remove("d-none");
+                }
+            }
+        }
+    }
+})();
+

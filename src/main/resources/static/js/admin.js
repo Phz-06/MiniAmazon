@@ -308,8 +308,3 @@ async function stopUPSServer() {
         alert("Error stopping UPS server.");
     }
 }
-
-function logout() {
-    localStorage.removeItem("token");
-    window.location.href = "/signin";
-}

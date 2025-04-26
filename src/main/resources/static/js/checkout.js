@@ -81,8 +81,3 @@ async function checkout() {
         alert("Error during checkout.");
     }
 }
-
-function logout() {
-    localStorage.removeItem("token");
-    window.location.href = "/signin";
-}

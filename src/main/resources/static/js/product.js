@@ -39,11 +39,6 @@
     }
 })();
 
-function logout() {
-    localStorage.removeItem("token");
-    window.location.href = "/signin";
-}
-
 function getProductIdFromUrl() {
     const parts = window.location.pathname.split("/");
     const id = parts[2]; // /product/{id}

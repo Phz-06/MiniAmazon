@@ -14,6 +14,9 @@
 </head>
 
 <body>
+  <!-- Navbar -->
+  <div th:replace="~{components/navbar :: navbar}"></div>
+
   <!-- Page Content -->
   <div th:if="${template != null} and ${fragment != null}"
        th:replace="~{${template} :: ${fragment}}">

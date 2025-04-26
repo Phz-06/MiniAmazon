@@ -123,8 +123,3 @@ async function clearCart() {
 function checkout() {
     window.location.href = "/checkout";
 }
-
-function logout() {
-    localStorage.removeItem("token");
-    window.location.href = "/signin";
-}
