@@ -73,6 +73,9 @@ public class UserAuthenticationController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
 
+        System.out.println("Authentication object: " + authentication);
+        System.out.println("Authorities: " + authentication.getAuthorities());
+
         String username = authentication.getName();
         String role = authentication.getAuthorities().stream()
                 .findFirst()
