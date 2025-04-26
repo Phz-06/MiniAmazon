@@ -28,12 +28,12 @@ async function loadCart() {
         const cartItems = document.getElementById("cartItems");
         cartItems.innerHTML = "";
 
-        if (data.items.length === 0) {
+        if (!data.cartItems || data.cartItems.length === 0) {
             cartItems.innerHTML = "<div class='text-muted'>Your cart is empty.</div>";
             return;
         }
 
-        for (const item of data.items) {
+        for (const item of data.cartItems) {
             const div = document.createElement("div");
             div.className = "list-group-item d-flex justify-content-between align-items-center";
             div.innerHTML = `
