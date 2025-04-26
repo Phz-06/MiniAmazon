@@ -147,7 +147,7 @@ async function checkout() {
         }
 
         alert("Order placed successfully!");
-        loadCart();
+        window.location.href = "/"; // 👈 redirect to home or catalog
     } catch (err) {
         console.error(err);
         alert("Error during checkout.");
