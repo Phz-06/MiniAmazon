@@ -65,3 +65,8 @@ async function init() {
 }
 
 init();
+
+function logout() {
+    localStorage.removeItem("token");
+    window.location.href = "/signin";
+}
