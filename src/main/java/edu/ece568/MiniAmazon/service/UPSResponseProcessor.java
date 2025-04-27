@@ -81,7 +81,7 @@ public class UPSResponseProcessor {
     private void processTruckAssignment(TruckAssignment truckAssignment) {
         String packageId = truckAssignment.getPackageId();
         int truckId = truckAssignment.getTruckId();
-        Order order = orderService.getOrderByShipmentId("PKG-" + packageId);
+        Order order = orderService.getOrderByShipmentId(packageId);
         if (order != null) {
             order.setTruckId(truckId);
             order.setStatus(Status.LOADING);

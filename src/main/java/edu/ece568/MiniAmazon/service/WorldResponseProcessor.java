@@ -51,7 +51,7 @@ public class WorldResponseProcessor {
      */
     public void registerPackageDetails(String packageId, int warehouseId, int destX, int destY, String upsAccount) {
         // Convert package ID string to numeric shipment ID
-        long shipmentId = Long.parseLong(packageId.replace("PKG-", ""));
+        long shipmentId = Long.parseLong(packageId);
         
         Map<String, Object> details = new HashMap<>();
         details.put("packageId", packageId);
@@ -154,9 +154,10 @@ public class WorldResponseProcessor {
                 log.error("No package details found for shipment ID: {}", shipmentId);
                 return;
             }
-            
+
+            String packageId = (String) packageDetails.get("packageId");
             // Get order and update status in a separate transaction
-            Order order = orderService.getOrderByShipmentId("PKG-" + shipmentId);
+            Order order = orderService.getOrderByShipmentId(packageId);
             if (order == null) {
                 log.error("No order found for shipment ID: {}", shipmentId);
                 return;
@@ -170,7 +171,7 @@ public class WorldResponseProcessor {
             order.setStatus(Status.PACKED);
             orderService.saveOrder(order);
 
-            String packageId = (String) packageDetails.get("packageId");
+            //String packageId = (String) packageDetails.get("packageId");
             int warehouseId = (int) packageDetails.get("warehouseId");
             int destX = (int) packageDetails.get("destX");
             int destY = (int) packageDetails.get("destY");
@@ -218,7 +219,7 @@ public class WorldResponseProcessor {
             log.info("Updating shipment {} status to LOADED", shipmentId);
 
             Integer truckId = (Integer) packageDetails.get("truckId");
-            Order order = orderService.getOrderByShipmentId("PKG-" + shipmentId);
+            Order order = orderService.getOrderByShipmentId(packageId);
             if (order != null) {
                 order.setStatus(Status.LOADED);
                 orderService.saveOrder(order);
@@ -284,7 +285,7 @@ public class WorldResponseProcessor {
     public void associateTruckWithPackage(String packageId, int truckId) {
         try {
             // Convert package ID to shipment ID
-            long shipmentId = Long.parseLong(packageId.replace("PKG-", ""));
+            long shipmentId = Long.parseLong(packageId);
             
             // Update the package details
             Map<String, Object> packageDetails = packageDetailsMap.get(shipmentId);

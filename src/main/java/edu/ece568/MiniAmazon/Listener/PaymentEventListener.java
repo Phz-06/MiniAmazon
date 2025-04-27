@@ -49,7 +49,7 @@ public class PaymentEventListener {
         
         // Generate a unique package ID
         long getANum = UUID.randomUUID().getMostSignificantBits() & Long.MAX_VALUE;
-        String packageId = String.format("PKG-%07d", getANum);
+        String packageId = String.format("%07d", getANum);
         order.setStatus(Status.PACKING);
         order.setShipmentId(packageId);
         orderService.saveOrder(order);
