@@ -25,13 +25,13 @@ document.addEventListener("DOMContentLoaded", function() {
 
     const payload = Utils.parseJwt(token);
     if (!payload) return;
-    
+
     const userNameSpan = document.getElementById("userName");
     if (userNameSpan) {
         userNameSpan.textContent = payload.sub || "User";
     }
 
-    if (payload.role === "ADMIN") {
+    if (payload.role === "ROLE_ADMIN") {
         const adminButton = document.getElementById("adminButton");
         if (adminButton) {
             adminButton.classList.remove("d-none");
