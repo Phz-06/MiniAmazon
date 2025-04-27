@@ -1,14 +1,22 @@
 ﻿let searchTimeout = null;
 
 async function loadProducts() {
-    const category = document.getElementById("categoryFilter").value;
-    const query = document.getElementById("searchInput").value.toLowerCase();
+    const categoryDropdown = document.getElementById("categoryFilter");
+    const searchInput = document.getElementById("searchInput");
+    const list = document.getElementById("productList");
+
+    if (!categoryDropdown || !searchInput || !list) {
+        console.warn("Catalog page elements missing. Skipping loadProducts.");
+        return;
+    }
+
+    const category = categoryDropdown.value;
+    const query = searchInput.value.toLowerCase();
 
     const res = await fetch("/api/products");
     const data = await res.json();
     const products = data.products;
 
-    const list = document.getElementById("productList");
     list.innerHTML = "";
 
     products
