@@ -115,7 +115,7 @@ public class UPSSocketServerService {
     }
 
     private synchronized void handleUpsConnection(Socket clientSocket) {
-        closeClientConnection();
+        //closeClientConnection();
 
         try {
             this.upsClientSocket = clientSocket;
