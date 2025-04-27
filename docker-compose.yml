@@ -22,7 +22,7 @@ services:
       - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/amazon
       - SPRING_DATASOURCE_USERNAME=amazonuser
       - SPRING_DATASOURCE_PASSWORD=ERSSIG3
-      - WORLD_HOST=host.docker.internal
+      - WORLD_HOST=vcm-46892.vm.duke.edu 8090
       - WORLD_PORT=23456
       - SERVER_PORT=8000
       - AMAZON_SERVER_PORT=8090
