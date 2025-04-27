@@ -23,7 +23,9 @@ public class UPSEventListener {
     @EventListener
     public void handleShipmentRequestEvent(ShipmentRequestEvent event) {
         log.info("Handling shipment request event for package id: {}", event.getPackageId());
-        
+
+
+
         try {
             // Send the shipment request to UPS
             long seqNum = upsService.sendShipmentRequest(
@@ -35,7 +37,7 @@ public class UPSEventListener {
             );
             
             if (seqNum > 0) {
-                log.info("Sent shipment request to UPS for package: {}, seqNum: {}", 
+                log.info("Sent shipment request to UPS for package: {}, seqNum: {}, ",
                         event.getPackageId(), seqNum);
             } else {
                 log.error("Failed to send shipment request to UPS for package: {}", 

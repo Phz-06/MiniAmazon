@@ -3,6 +3,7 @@ package edu.ece568.MiniAmazon.service;
 import edu.ece568.MiniAmazon.Event.LoadConfirmationEvent;
 import edu.ece568.MiniAmazon.Event.ShipmentRequestEvent;
 import edu.ece568.MiniAmazon.model.Order;
+import edu.ece568.MiniAmazon.model.Product;
 import edu.ece568.MiniAmazon.model.Status;
 import edu.ece568.MiniAmazon.proto.WorldAmazon.AResponses;
 import edu.ece568.MiniAmazon.proto.WorldAmazon.APurchaseMore;
@@ -15,6 +16,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -138,7 +140,8 @@ public class WorldResponseProcessor {
      * 
      * @param ready The APacked message
      */
-    private void processReadyPackage(APacked ready) {
+    @Transactional
+    protected void processReadyPackage(APacked ready) {
         long shipmentId = ready.getShipid();
         long seqNum = ready.getSeqnum();
         
@@ -152,25 +155,35 @@ public class WorldResponseProcessor {
                 return;
             }
             
+            // Get order and update status in a separate transaction
+            Order order = orderService.getOrderByShipmentId("PKG-" + shipmentId);
+            if (order == null) {
+                log.error("No order found for shipment ID: {}", shipmentId);
+                return;
+            } 
+
+            
+            // Fetch product information for description - use the first item as representative
+            String description = "";
+            try {
+                if (order.getOrderItems() != null && !order.getOrderItems().isEmpty()) {
+                    description = order.getOrderItems().get(0).getProduct().getDescription();
+                }
+            } catch (Exception e) {
+                log.warn("Could not get product description for shipment {}, using empty string", shipmentId);
+            }
+            order.setStatus(Status.PACKED);
+            orderService.saveOrder(order);
+
             String packageId = (String) packageDetails.get("packageId");
             int warehouseId = (int) packageDetails.get("warehouseId");
             int destX = (int) packageDetails.get("destX");
             int destY = (int) packageDetails.get("destY");
             String upsAccount = (String) packageDetails.get("upsAccount");
             
-            // Update shipment status
-            log.info("Updating shipment {} status to PACKED", shipmentId);
-            Order order = orderService.getOrderByShipmentId("PKG-" + shipmentId);
-            if (order != null) {
-                order.setStatus(Status.PACKED);
-                orderService.saveOrder(order);
-            } else {
-                log.error("No order found for shipment ID: {}", shipmentId);
-                return;
-            }
             // Publish event to request UPS to pick up the package
             ShipmentRequestEvent shipmentRequestEvent = new ShipmentRequestEvent(
-                    packageId,
+                    packageId + "_" + description,
                     warehouseId,
                     destX,
                     destY,
