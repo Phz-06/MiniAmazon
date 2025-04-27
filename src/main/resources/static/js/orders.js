@@ -1,56 +1,82 @@
-﻿async function loadOrder() {
-    const orderId = document.getElementById("orderIdInput").value.trim();
-    if (!orderId) {
-        alert("Please enter an Order ID.");
+﻿(async function() {
+    const token = localStorage.getItem("token");
+    if (!token) {
+        window.location.href = "/signin";
         return;
     }
-
-    try {
-        const res = await fetch(`/api/orders/${orderId}`, {
-            method: "GET",
-            headers: getAuthHeaders()
-        });
-
-        if (!res.ok) {
-            document.getElementById("orderDetails").classList.add("d-none");
-            const errorDiv = document.getElementById("orderError");
-            errorDiv.textContent = "Order not found or access denied.";
-            errorDiv.classList.remove("d-none");
-            return;
-        }
-
-        const data = await res.json();
-
-        // Fill in the order details
-        document.getElementById("orderId").textContent = data.orderId;
-        document.getElementById("orderStatus").textContent = data.status;
-        document.getElementById("deliveryX").textContent = data.deliveryX;
-        document.getElementById("deliveryY").textContent = data.deliveryY;
-
-        const itemsList = document.getElementById("orderItems");
-        itemsList.innerHTML = "";
-        data.items.forEach(item => {
-            const li = document.createElement("li");
-            li.className = "list-group-item";
-            li.textContent = `${item.productName} x${item.quantity}`;
-            itemsList.appendChild(li);
-        });
-
-        document.getElementById("orderError").classList.add("d-none");
-        document.getElementById("orderDetails").classList.remove("d-none");
-
-    } catch (err) {
-        console.error(err);
-        alert("Failed to load order.");
-    }
-}
+    await loadOrders();
+})();
 
 function getAuthHeaders() {
     const token = localStorage.getItem("token");
     return { "Authorization": "Bearer " + token, "Content-Type": "application/json" };
 }
 
-function logout() {
-    localStorage.removeItem("token");
-    window.location.href = "/signin";
+async function loadOrders() {
+    try {
+        const res = await fetch("/api/users/me/my-orders", {
+            method: "POST",
+            headers: getAuthHeaders()
+        });
+
+        if (!res.ok) {
+            alert("Failed to load orders.");
+            return;
+        }
+
+        const orders = await res.json();
+        const container = document.getElementById("ordersList");
+        container.innerHTML = "";
+
+        if (!orders || orders.length === 0) {
+            container.innerHTML = "<div class='text-muted'>No orders found.</div>";
+            return;
+        }
+
+        for (const order of orders) {
+            const div = document.createElement("div");
+            div.className = "card p-3 mb-3 shadow-sm";
+
+            div.innerHTML = `
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h5>Order #${order.id}</h5>
+                        <p>Status: <strong>${order.status}</strong></p>
+                    </div>
+                    <div>
+                        ${order.status === "CREATED" || order.status === "CONFIRMED" ? `
+                            <button class="btn btn-danger btn-sm" onclick="cancelOrder(${order.id})">Cancel</button>
+                        ` : ''}
+                    </div>
+                </div>
+            `;
+
+            container.appendChild(div);
+        }
+    } catch (err) {
+        console.error(err);
+        alert("Error loading orders.");
+    }
+}
+
+async function cancelOrder(orderId) {
+    if (!confirm("Are you sure you want to cancel this order?")) return;
+
+    try {
+        const res = await fetch(`/api/orders/${orderId}/cancel`, {
+            method: "POST",
+            headers: getAuthHeaders()
+        });
+
+        if (!res.ok) {
+            alert("Failed to cancel order.");
+            return;
+        }
+
+        alert("Order cancellation requested.");
+        await loadOrders();
+    } catch (err) {
+        console.error(err);
+        alert("Error cancelling order.");
+    }
 }
