@@ -26,6 +26,8 @@ document.addEventListener("DOMContentLoaded", function() {
     const payload = Utils.parseJwt(token);
     if (!payload) return;
 
+    console.log("Decoded JWT Payload:", payload);
+
     const userNameSpan = document.getElementById("userName");
     if (userNameSpan) {
         userNameSpan.textContent = payload.sub || "User";
