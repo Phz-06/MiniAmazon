@@ -15,7 +15,7 @@ function getAuthHeaders() {
 async function loadOrders() {
     try {
         const res = await fetch("/api/users/me/my-orders", {
-            method: "GET",
+            method: "POST",
             headers: getAuthHeaders()
         });
 
