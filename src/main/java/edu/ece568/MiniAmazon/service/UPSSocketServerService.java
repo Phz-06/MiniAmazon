@@ -74,7 +74,7 @@ public class UPSSocketServerService {
         for (int attempt = 0; attempt < maxRetries; attempt++) {
             try {
                 log.info("Attempting to start UPS socket server on port {}", listenPort);
-                serverSocket = new ServerSocket(listenPort);
+                serverSocket = new ServerSocket(listenPort, 50, java.net.InetAddress.getByName("0.0.0.0"));
                 serverRunning.set(true);
                 actualPort = listenPort;
                 
