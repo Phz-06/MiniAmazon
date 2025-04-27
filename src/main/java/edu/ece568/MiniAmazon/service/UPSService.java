@@ -197,10 +197,7 @@ public class UPSService {
      * Send a message to UPS
      */
     private void sendMessage(GenericMessage message) throws IOException {
-        if (outputStream == null) {
-            throw new IOException("Not connected to UPS server");
-        }
-        
+
         // Get size of message
         int size = message.getSerializedSize();
         
@@ -221,10 +218,7 @@ public class UPSService {
      * Receive a message from UPS
      */
     private GenericMessage receiveMessage() throws IOException {
-        if (inputStream == null) {
-            throw new IOException("Not connected to UPS server");
-        }
-        
+
         // Create coded input stream
         CodedInputStream codedInputStream = CodedInputStream.newInstance(inputStream);
         
