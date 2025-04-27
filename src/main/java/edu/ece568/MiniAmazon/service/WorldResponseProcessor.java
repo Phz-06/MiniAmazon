@@ -3,7 +3,6 @@ package edu.ece568.MiniAmazon.service;
 import edu.ece568.MiniAmazon.Event.LoadConfirmationEvent;
 import edu.ece568.MiniAmazon.Event.ShipmentRequestEvent;
 import edu.ece568.MiniAmazon.model.Order;
-import edu.ece568.MiniAmazon.model.Product;
 import edu.ece568.MiniAmazon.model.Status;
 import edu.ece568.MiniAmazon.proto.WorldAmazon.AResponses;
 import edu.ece568.MiniAmazon.proto.WorldAmazon.APurchaseMore;
@@ -20,8 +19,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.HashMap;
 import java.util.Map;
-
-import static org.springframework.data.repository.util.ClassUtils.ifPresent;
 
 /**
  * Service to process responses from the World Simulator
@@ -49,7 +46,7 @@ public class WorldResponseProcessor {
     /**
      * Register a package's details for future reference
      */
-    public void registerPackageDetails(String packageId, int warehouseId, int destX, int destY, String upsAccount) {
+    public void registerPackageDetails(String packageId, int warehouseId, int destX, int destY, String upsAccount, Integer truckId) {
         // Convert package ID string to numeric shipment ID
         long shipmentId = Long.parseLong(packageId);
         
@@ -59,7 +56,7 @@ public class WorldResponseProcessor {
         details.put("destX", destX);
         details.put("destY", destY);
         details.put("upsAccount", upsAccount);
-        
+        details.put("truckId", truckId);
         packageDetailsMap.put(shipmentId, details);
         log.info("Registered package details for shipment ID: {}, package ID: {}", shipmentId, packageId);
     }
