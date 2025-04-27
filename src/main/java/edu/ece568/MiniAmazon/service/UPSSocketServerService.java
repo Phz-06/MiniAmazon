@@ -2,6 +2,7 @@ package edu.ece568.MiniAmazon.service;
 
 import com.google.protobuf.CodedInputStream;
 import com.google.protobuf.CodedOutputStream;
+import edu.ece568.MiniAmazon.proto.Amazon_UPS;
 import edu.ece568.MiniAmazon.proto.Amazon_UPS.GenericMessage;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -147,16 +148,16 @@ public class UPSSocketServerService {
 
                 log.info("Received message from UPS: {}", message.getType());
 
-                if (message.hasAck()) {
-                    upsService.handleIncomingAck(message.getAck());
-                    continue;
-                }
+//                if (message.hasAck()) {
+//                    upsService.handleIncomingAck(message.getAck());
+//                    continue;
+//                }
 
                 sendAcknowledgment(message.getSeqnum());
 
                 incomingMessageQueue.put(message);
 
-                upsService.processIncomingMessage(message);
+                //upsService.processIncomingMessage(message);
 
             } catch (Exception e) {
                 if (clientConnected.get()) {
@@ -173,6 +174,63 @@ public class UPSSocketServerService {
         GenericMessage ackMessage = upsService.createAcknowledgmentMessage(seqNumToAck);
         sendMessage(ackMessage);
         log.debug("Sent acknowledgment for seqnum: {} (for compatibility)", seqNumToAck);
+    }
+
+    public long sendShipmentRequest(String packageId, int warehouseId, int destX, int destY, String upsAccount) {
+        long msgSeqNum = 1;
+
+        Amazon_UPS.ShipmentRequest.Builder builder = Amazon_UPS.ShipmentRequest.newBuilder()
+                .setPackageId(packageId)
+                .setWarehouseId(warehouseId)
+                .setDestination(Amazon_UPS.Coordinates.newBuilder().setX(destX).setY(destY).build())
+                .setSeqnum(msgSeqNum);
+
+        if (upsAccount != null && !upsAccount.isEmpty()) {
+            builder.setUpsAccount(upsAccount);
+        }
+
+        GenericMessage message = GenericMessage.newBuilder()
+                .setType("shipment_request")
+                .setSeqnum(msgSeqNum)
+                .setShipmentRequest(builder.build())
+                .build();
+
+        try {
+            // No longer store for retries
+            sendMessage(message);
+            log.info("Sent shipment request for package: {}, seqnum: {}", packageId, msgSeqNum);
+            return msgSeqNum;
+        } catch (Exception e) {
+            log.error("Failed to send shipment request for package: {}", packageId, e);
+            return -1;
+        }
+    }
+
+    public long sendLoadConfirmation(String packageId, int truckId) {
+        long msgSeqNum = 1;
+
+        Amazon_UPS.LoadConfirmation loadConfirmation = Amazon_UPS.LoadConfirmation.newBuilder()
+                .setPackageId(packageId)
+                .setTruckId(truckId)
+                .setSeqnum(msgSeqNum)
+                .build();
+
+        GenericMessage message = GenericMessage.newBuilder()
+                .setType("load_confirmation")
+                .setSeqnum(msgSeqNum)
+                .setLoadConfirmation(loadConfirmation)
+                .build();
+
+        try {
+            sendMessage(message);
+            log.info("Sent load confirmation for package: {}, truck: {}, seqnum: {}",
+                    packageId, truckId, msgSeqNum);
+            return msgSeqNum;
+        } catch (Exception e) {
+            log.error("Failed to send load confirmation for package: {}, truck: {}",
+                    packageId, truckId, e);
+            return -1;
+        }
     }
 
     public GenericMessage getNextIncomingMessage() {

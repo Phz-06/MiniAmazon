@@ -6,6 +6,7 @@ import edu.ece568.MiniAmazon.Event.ShipmentRequestEvent;
 import edu.ece568.MiniAmazon.model.Status;
 import edu.ece568.MiniAmazon.service.OrderService;
 import edu.ece568.MiniAmazon.service.UPSService;
+import edu.ece568.MiniAmazon.service.UPSSocketServerService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Service;
@@ -16,10 +17,12 @@ public class UPSEventListener {
 
     private final UPSService upsService;
     private final OrderService orderService;
+    private final UPSSocketServerService uPSSocketServerService;
 
-    public UPSEventListener(UPSService upsService, OrderService orderService) {
+    public UPSEventListener(UPSService upsService, OrderService orderService, UPSSocketServerService uPSSocketServerService) {
         this.upsService = upsService;
         this.orderService = orderService;
+        this.uPSSocketServerService = uPSSocketServerService;
     }
 
     /**
@@ -33,7 +36,7 @@ public class UPSEventListener {
 
         try {
             // Send the shipment request to UPS
-            long seqNum = upsService.sendShipmentRequest(
+            long seqNum = uPSSocketServerService.sendShipmentRequest(
                     event.getPackageId(),
                     event.getWarehouseId(),
                     event.getDestX(),
@@ -64,7 +67,7 @@ public class UPSEventListener {
         
         try {
             // Send the load confirmation to UPS
-            long seqNum = upsService.sendLoadConfirmation(
+            long seqNum = uPSSocketServerService.sendLoadConfirmation(
                     event.getPackageId(),
                     event.getTruckId()
             );
