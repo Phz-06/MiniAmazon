@@ -14,6 +14,6 @@ public class PaymentRequest {
     @NotEmpty(message = "Credit card number is required")
     private String creditCardNumber;
 
-    @NotEmpty(message = "Amount is required")
+    @NotNull
     private BigDecimal amount;
 }
