@@ -29,6 +29,9 @@ public class UPSSocketServerService {
     @Value("${amazon.server.port:8090}")
     private int serverPort;
     
+    @Getter
+    private int actualPort;
+    
     private ServerSocket serverSocket;
     private Socket upsClientSocket;
     private InputStream inputStream;
@@ -61,7 +64,7 @@ public class UPSSocketServerService {
     @Async
     public boolean startServer(Integer port) {
         if (serverRunning.get()) {
-            log.info("UPS socket server is already running");
+            log.info("UPS socket server is already running on port {}", actualPort);
             return true;
         }
         
@@ -73,8 +76,9 @@ public class UPSSocketServerService {
                 log.info("Attempting to start UPS socket server on port {}", listenPort);
                 serverSocket = new ServerSocket(listenPort);
                 serverRunning.set(true);
+                actualPort = listenPort;
                 
-                log.info("UPS socket server started on port {}", listenPort);
+                log.info("UPS socket server started successfully on port {}", actualPort);
                 
                 // Start server thread to accept connections
                 serverThread = new Thread(this::acceptConnections);
@@ -94,6 +98,16 @@ public class UPSSocketServerService {
         
         log.error("Failed to start UPS socket server after {} attempts", maxRetries);
         return false;
+    }
+    
+    /**
+     * Get the port the server is currently running on
+     */
+    public Integer getServerPort() {
+        if (!serverRunning.get()) {
+            return null;
+        }
+        return actualPort;
     }
     
     /**

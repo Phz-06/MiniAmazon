@@ -7,10 +7,12 @@ import edu.ece568.MiniAmazon.service.UPSService;
 import edu.ece568.MiniAmazon.service.UPSSocketServerService;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
 import java.util.Map;
 
 @Slf4j
@@ -99,20 +101,27 @@ public class UPSController {
         boolean isConnected = upsService.isConnected();
         boolean isServerRunning = upsSocketServerService.getServerRunning().get();
         boolean isClientConnected = upsSocketServerService.isUpsClientConnected();
+        Integer serverPort = upsSocketServerService.getServerPort();
         
-        return ResponseEntity.ok(Map.of(
-            "connected", isConnected,
-            "status", isConnected ? "connected" : "disconnected",
-            "serverRunning", isServerRunning,
-            "upsClientConnected", isClientConnected
-        ));
+        Map<String, Object> status = new HashMap<>();
+        status.put("connected", isConnected);
+        status.put("status", isConnected ? "connected" : "disconnected");
+        status.put("serverRunning", isServerRunning);
+        status.put("upsClientConnected", isClientConnected);
+        if (serverPort != null) {
+            status.put("serverPort", serverPort);
+        }
+        
+        return ResponseEntity.ok(status);
     }
     
     /**
-     * Start the UPS socket server with optional custom port
+     * Start the UPS socket server
+     * 
+     * @return the result of the operation
      */
-    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/server/start")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Map<String, Object>> startUPSSocketServer(@RequestBody(required = false) UPSServerRequest request) {
         Integer port = (request != null) ? request.getPort() : null;
         
@@ -121,12 +130,16 @@ public class UPSController {
         boolean success = upsSocketServerService.startServer(port);
         
         if (success) {
-            return ResponseEntity.ok(Map.of(
-                "status", "started",
-                "message", "UPS socket server started successfully"
-            ));
+            Integer actualPort = upsSocketServerService.getServerPort();
+            Map<String, Object> response = new HashMap<>();
+            response.put("status", "started");
+            response.put("message", "UPS socket server started successfully");
+            if (actualPort != null) {
+                response.put("port", actualPort);
+            }
+            return ResponseEntity.ok(response);
         } else {
-            return ResponseEntity.badRequest().body(Map.of(
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of(
                 "status", "failed",
                 "message", "Failed to start UPS socket server"
             ));
