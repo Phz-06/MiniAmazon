@@ -26,7 +26,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 @Service
 public class UPSSocketServerService {
 
-    @Value("${amazon.server.port:8000}")
+    @Value("${amazon.server.port:8090}")
     private int serverPort;
     
     private ServerSocket serverSocket;
@@ -65,23 +65,35 @@ public class UPSSocketServerService {
             return true;
         }
         
-        try {
-            int listenPort = (port != null) ? port : serverPort;
-            serverSocket = new ServerSocket(listenPort);
-            serverRunning.set(true);
-            
-            log.info("UPS socket server started on port {}", listenPort);
-            
-            // Start server thread to accept connections
-            serverThread = new Thread(this::acceptConnections);
-            serverThread.setDaemon(true);
-            serverThread.start();
-            
-            return true;
-        } catch (IOException e) {
-            log.error("Failed to start UPS socket server", e);
-            return false;
+        int listenPort = (port != null) ? port : serverPort;
+        int maxRetries = 5;
+        
+        for (int attempt = 0; attempt < maxRetries; attempt++) {
+            try {
+                log.info("Attempting to start UPS socket server on port {}", listenPort);
+                serverSocket = new ServerSocket(listenPort);
+                serverRunning.set(true);
+                
+                log.info("UPS socket server started on port {}", listenPort);
+                
+                // Start server thread to accept connections
+                serverThread = new Thread(this::acceptConnections);
+                serverThread.setDaemon(true);
+                serverThread.start();
+                
+                return true;
+            } catch (java.net.BindException e) {
+                // Port already in use
+                log.warn("Port {} already in use, trying next port", listenPort);
+                listenPort++; // Try next port
+            } catch (IOException e) {
+                log.error("Failed to start UPS socket server", e);
+                return false;
+            }
         }
+        
+        log.error("Failed to start UPS socket server after {} attempts", maxRetries);
+        return false;
     }
     
     /**
@@ -266,7 +278,7 @@ public class UPSSocketServerService {
             }
         }
     }
-    
+
     /**
      * Check if a UPS client is connected
      */
