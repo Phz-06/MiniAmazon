@@ -99,10 +99,7 @@ public class UPSSocketServerService {
         log.error("Failed to start UPS socket server after {} attempts", maxRetries);
         return false;
     }
-    
-    /**
-     * Get the port the server is currently running on
-     */
+
     public Integer getServerPort() {
         if (!serverRunning.get()) {
             return null;
