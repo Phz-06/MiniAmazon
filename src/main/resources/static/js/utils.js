@@ -33,7 +33,7 @@ document.addEventListener("DOMContentLoaded", function() {
         userNameSpan.textContent = payload.sub || "User";
     }
 
-    if (payload.role === "ROLE_ADMIN") {
+    if (payload.sub === "admin") {
         const adminButton = document.getElementById("adminButton");
         if (adminButton) {
             adminButton.classList.remove("d-none");
