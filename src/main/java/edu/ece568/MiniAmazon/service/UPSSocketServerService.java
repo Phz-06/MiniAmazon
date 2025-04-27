@@ -102,20 +102,26 @@ public class UPSSocketServerService {
     private void acceptConnections() {
         while (serverRunning.get() && !serverSocket.isClosed()) {
             try {
-                log.info("Waiting for UPS to connect...");
-                Socket clientSocket = serverSocket.accept();
-
-                handleUpsConnection(clientSocket);
+                if (!clientConnected.get()) {
+                    log.info("Waiting for UPS to connect...");
+                    Socket clientSocket = serverSocket.accept();
+                    handleUpsConnection(clientSocket);
+                } else {
+                    Thread.sleep(5000);
+                }
             } catch (IOException e) {
                 if (serverRunning.get()) {
                     log.error("Error accepting UPS connection", e);
                 }
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                log.warn("Accept connection thread interrupted");
             }
         }
     }
 
     private synchronized void handleUpsConnection(Socket clientSocket) {
-        //closeClientConnection();
+        closeClientConnection();
 
         try {
             this.upsClientSocket = clientSocket;
@@ -160,6 +166,7 @@ public class UPSSocketServerService {
                 break;
             }
         }
+        clientConnected.set(false);
     }
 
     private void sendAcknowledgment(long seqNumToAck) throws IOException {
