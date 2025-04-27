@@ -166,8 +166,6 @@ public class WorldResponseProcessor {
             // Fetch product information for description - use the first item as representative
 
             String description = order.getOrderItems().get(0).getProduct().getDescription();
-
-            log.warn("Could not get product description for shipment {}, using empty string", shipmentId);
             log.info("the description is {}", description);
             order.setStatus(Status.PACKED);
             orderService.saveOrder(order);

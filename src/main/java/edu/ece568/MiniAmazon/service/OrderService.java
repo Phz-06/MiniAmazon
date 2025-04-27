@@ -115,6 +115,13 @@ public class OrderService {
     }
 
     @Transactional
+    public void setStatus(String shipmentId, Status status) {
+        Order order = getOrderByShipmentId(shipmentId);
+        order.setStatus(status);
+        orderRepository.save(order);
+    }
+
+    @Transactional
     public void saveOrder(Order order) {
         orderRepository.save(order);
     }

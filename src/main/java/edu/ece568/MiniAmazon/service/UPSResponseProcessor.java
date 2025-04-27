@@ -14,6 +14,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
+import static edu.ece568.MiniAmazon.model.Status.DELIVERED;
+
 /**
  * Service to process responses from UPS
  */
@@ -102,33 +104,33 @@ public class UPSResponseProcessor {
      * @param deliveryUpdate The delivery update message
      */
     private void processDeliveryUpdate(DeliveryUpdate deliveryUpdate) {
-        String packageId = deliveryUpdate.getPackageId();
-        DeliveryUpdate.Status status = deliveryUpdate.getStatus();
-        
-        log.info("Delivery update received for package: {}, status: {}", packageId, status);
-        
-        try {
-            // Publish event to update package status
-            String statusStr = "";
-            switch (status) {
-                case PACKING:
-                    statusStr = "PACKING";
-                    break;
-                case OUT_FOR_DELIVERY:
-                    statusStr = "OUT_FOR_DELIVERY";
-                    break;
-                case DELIVERING:
-                    statusStr = "DELIVERING";
-                    break;
-            }
-            
-            PackageStatusUpdateEvent statusEvent = new PackageStatusUpdateEvent(packageId, statusStr);
-            eventPublisher.publish(statusEvent);
-            
-            log.info("Published package status update event for package: {}, status: {}", packageId, statusStr);
-        } catch (Exception e) {
-            log.error("Error processing delivery update for package: {}", packageId, e);
-        }
+//        String packageId = deliveryUpdate.getPackageId();
+//        DeliveryUpdate.Status status = deliveryUpdate.getStatus();
+//
+//        log.info("Delivery update received for package: {}, status: {}", packageId, status);
+//
+//        try {
+//            // Publish event to update package status
+////            String statusStr = "";
+////            switch (status) {
+////                case PACKING:
+////                    //statusStr = "PACKING";
+////                    break;
+////                case OUT_FOR_DELIVERY:
+////                    //statusStr = "OUT_FOR_DELIVERY";
+////                    break;
+////                case DELIVERED:
+////                    statusStr = "DELIVERING";
+////                    break;
+////            }
+//
+//            //PackageStatusUpdateEvent statusEvent = new PackageStatusUpdateEvent(packageId, statusStr);
+//            //e/ventPublisher.publish(statusEvent);
+//
+//            log.info("Published package status update event for package: {}, status: {}", packageId, statusStr);
+//        } catch (Exception e) {
+//            log.error("Error processing delivery update for package: {}", packageId, e);
+//        }
     }
 
     /**
