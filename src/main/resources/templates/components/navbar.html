@@ -1,0 +1,19 @@
+﻿<nav class="navbar navbar-expand-lg navbar-dark bg-dark px-3" th:fragment="navbar">
+  <a class="navbar-brand d-flex align-items-center" href="/catalog">
+    <i class="bi bi-amazon"></i> &nbsp; Mini-Amazon
+  </a>
+
+  <div class="ms-3 d-flex gap-3">
+    <a class="btn btn-outline-light btn-sm" href="/catalog">Home</a>
+    <a class="btn btn-outline-light btn-sm" href="/cart">Cart</a>
+    <a class="btn btn-outline-light btn-sm" href="/orders">Orders</a>
+    <button id="adminButton" class="btn btn-outline-warning btn-sm d-none" onclick="window.location.href='/admin'">Admin</button>
+  </div>
+
+  <div class="ms-auto d-flex align-items-center text-white gap-3">
+    <div class="text-end">
+      <small>Hello, <span id="userName">Guest</span></small><br/>
+    </div>
+    <button class="btn btn-outline-light btn-sm" onclick="logout()">Logout</button>
+  </div>
+</nav>

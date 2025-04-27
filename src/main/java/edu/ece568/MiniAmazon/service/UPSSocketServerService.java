@@ -139,14 +139,12 @@ public class UPSSocketServerService {
                 // Process the received message
                 log.info("Received message from UPS: {}", message.getType());
                 
-                // Handle acknowledgments
+
                 if (message.hasAck()) {
-                    // Forward to UPS service for handling
                     upsService.handleIncomingAck(message.getAck());
                     continue;
                 }
-                
-                // Send acknowledgment for received message
+
                 sendAcknowledgment(message.getSeqnum());
                 
                 // Add to queue for processing
@@ -167,11 +165,12 @@ public class UPSSocketServerService {
     
     /**
      * Send an acknowledgment for a received message
+     * This is maintained for protocol compatibility
      */
     private void sendAcknowledgment(long seqNumToAck) throws IOException {
         GenericMessage ackMessage = upsService.createAcknowledgmentMessage(seqNumToAck);
         sendMessage(ackMessage);
-        log.debug("Sent acknowledgment for seqnum: {}", seqNumToAck);
+        log.debug("Sent acknowledgment for seqnum: {} (for compatibility)", seqNumToAck);
     }
     
     /**

@@ -9,19 +9,16 @@ import edu.ece568.MiniAmazon.repository.UserRepository;
 import edu.ece568.MiniAmazon.security.JwtTokenUtils;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
-
-import java.util.Map;
+import org.springframework.web.bind.annotation.*;
+import java.util.*;
 
 @Slf4j
 @RestController
@@ -68,5 +65,24 @@ public class UserAuthenticationController {
         userRepository.save(user);
         log.info("User {} signed up successfully", request.getUsername());
         return ResponseEntity.ok(new JwtResponse(jwtTokenUtils.generateToken(request.getUsername())));
+    }
+
+    @GetMapping("/me")
+    public ResponseEntity<Map<String, String>> me(Authentication authentication) {
+        if (authentication == null || !authentication.isAuthenticated()) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+
+        String username = authentication.getName();
+        String role = authentication.getAuthorities().stream()
+                .findFirst()
+                .map(GrantedAuthority::getAuthority)
+                .orElse("ROLE_USER");
+
+        Map<String, String> response = new HashMap<>();
+        response.put("username", username);
+        response.put("role", role);
+
+        return ResponseEntity.ok(response);
     }
 }

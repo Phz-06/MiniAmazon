@@ -39,14 +39,7 @@ public class UPSService {
     private OutputStream outputStream;
     private InputStream inputStream;
     
-    // Track the seqNum for messages sent to UPS
     private final AtomicLong seqNum = new AtomicLong(1);
-    
-    // Track pending messages waiting for Ack
-    private final Map<Long, GenericMessage> pendingMessages = new ConcurrentHashMap<>();
-    
-    // Track retry counts for each message
-    private final Map<Long, Integer> retryCount = new ConcurrentHashMap<>();
     
     // Queue for messages received from UPS
     private final BlockingQueue<GenericMessage> messageQueue = new LinkedBlockingQueue<>();
@@ -57,16 +50,6 @@ public class UPSService {
     
     @Getter
     private boolean connected = false;
-    
-    // Cache of processed seqnums to avoid duplicates
-    private final List<Long> processedSeqnums = new ArrayList<>();
-    private static final int MAX_PROCESSED_CACHE = 1000;
-    
-    // Maximum retries for messages
-    private static final int MAX_RETRIES = 3;
-    
-    // Timeout for Ack (in milliseconds)
-    private static final long ACK_TIMEOUT = 5000;
     
     /**
      * Connect to the UPS server
@@ -107,27 +90,9 @@ public class UPSService {
             while (running && !socket.isClosed()) {
                 try {
                     GenericMessage message = receiveMessage();
-                    
-                    // Handle acknowledgments
-                    if (message.hasAck()) {
-                        handleAcknowledgment(message.getAck());
-                        continue;
-                    }
-                    
-                    // Send acknowledgment for received message
-                    sendAcknowledgment(message.getSeqnum());
-                    
-                    // Check for duplicates
-                    if (isDuplicate(message.getSeqnum())) {
-                        log.info("Received duplicate message with seqnum: {}, ignoring", message.getSeqnum());
-                        continue;
-                    }
-                    
-                    // Add to processed seqnums
-                    addToProcessedSeqnums(message.getSeqnum());
-                    
-                    // Add to queue for processing
+
                     messageQueue.put(message);
+                    log.debug("Received message from UPS: {}", message.getType());
                 } catch (Exception e) {
                     log.error("Error receiving messages from UPS", e);
                     if (!socket.isClosed()) {
@@ -184,19 +149,12 @@ public class UPSService {
                 .build();
         
         try {
-            // Store message for potential retry
-            pendingMessages.put(msgSeqNum, message);
-            retryCount.put(msgSeqNum, 0);
-            
-            // Send the message
+            // No longer store for retries
             sendMessage(message);
-            
             log.info("Sent shipment request for package: {}, seqnum: {}", packageId, msgSeqNum);
             return msgSeqNum;
         } catch (Exception e) {
             log.error("Failed to send shipment request for package: {}", packageId, e);
-            pendingMessages.remove(msgSeqNum);
-            retryCount.remove(msgSeqNum);
             return -1;
         }
     }
@@ -224,114 +182,14 @@ public class UPSService {
                 .build();
         
         try {
-            // Store message for potential retry
-            pendingMessages.put(msgSeqNum, message);
-            retryCount.put(msgSeqNum, 0);
-            
-            // Send the message
             sendMessage(message);
-            
             log.info("Sent load confirmation for package: {}, truck: {}, seqnum: {}", 
                     packageId, truckId, msgSeqNum);
             return msgSeqNum;
         } catch (Exception e) {
             log.error("Failed to send load confirmation for package: {}, truck: {}", 
                     packageId, truckId, e);
-            pendingMessages.remove(msgSeqNum);
-            retryCount.remove(msgSeqNum);
             return -1;
-        }
-    }
-    
-    /**
-     * Handle acknowledgment received from UPS
-     *
-     * @param ack The acknowledgment message
-     */
-    public void handleAcknowledgment(Ack ack) {
-        long ackSeqNum = ack.getSeqnum();
-        log.debug("Received acknowledgment for seqnum: {}", ackSeqNum);
-        
-        // Remove from pending messages
-        pendingMessages.remove(ackSeqNum);
-        retryCount.remove(ackSeqNum);
-    }
-    
-    /**
-     * Send acknowledgment for a received message
-     *
-     * @param seqNumToAck The sequence number to acknowledge
-     */
-    private void sendAcknowledgment(long seqNumToAck) throws IOException {
-        Ack ack = Ack.newBuilder().setSeqnum(seqNumToAck).build();
-        
-        GenericMessage message = GenericMessage.newBuilder()
-                .setType("ack")
-                .setAck(ack)
-                .build();
-        
-        sendMessage(message);
-        log.debug("Sent acknowledgment for seqnum: {}", seqNumToAck);
-    }
-    
-    /**
-     * Check if a sequence number has been processed already
-     */
-    private boolean isDuplicate(long seqNum) {
-        return processedSeqnums.contains(seqNum);
-    }
-    
-    /**
-     * Add a sequence number to the list of processed numbers
-     */
-    private void addToProcessedSeqnums(long seqNum) {
-        processedSeqnums.add(seqNum);
-        
-        // Keep the cache size limited
-        if (processedSeqnums.size() > MAX_PROCESSED_CACHE) {
-            processedSeqnums.remove(0);
-        }
-    }
-    
-    /**
-     * Scheduled method to check for messages that need to be retried
-     */
-    @Scheduled(fixedDelay = 1000)
-    public void retryPendingMessages() {
-        if (!connected || pendingMessages.isEmpty()) {
-            return;
-        }
-        
-        long currentTime = System.currentTimeMillis();
-        
-        for (Map.Entry<Long, GenericMessage> entry : new HashMap<>(pendingMessages).entrySet()) {
-            long msgSeqNum = entry.getKey();
-            GenericMessage message = entry.getValue();
-            
-            // Skip if recently sent
-            if (!retryCount.containsKey(msgSeqNum)) {
-                continue;
-            }
-            
-            int currentRetryCount = retryCount.get(msgSeqNum);
-            
-            // Check if we've exceeded max retries
-            if (currentRetryCount >= MAX_RETRIES) {
-                log.error("Max retries exceeded for seqnum: {}, giving up", msgSeqNum);
-                pendingMessages.remove(msgSeqNum);
-                retryCount.remove(msgSeqNum);
-                continue;
-            }
-            
-            // Retry sending the message
-            try {
-                sendMessage(message);
-                retryCount.put(msgSeqNum, currentRetryCount + 1);
-                log.info("Retrying message with seqnum: {}, retry count: {}", 
-                        msgSeqNum, currentRetryCount + 1);
-            } catch (Exception e) {
-                log.error("Failed to retry message with seqnum: {}", msgSeqNum, e);
-            }
         }
     }
     
@@ -399,51 +257,35 @@ public class UPSService {
     /**
      * Process an incoming message from the UPS socket server
      * This is called by the UPSSocketServerService when it receives a message
-     * 
-     * @param message The message received from UPS
      */
     public void processIncomingMessage(GenericMessage message) {
         try {
-            // Check for duplicates
-            if (isDuplicate(message.getSeqnum())) {
-                log.info("Received duplicate message with seqnum: {}, ignoring", message.getSeqnum());
-                return;
-            }
-            
-            // Add to processed seqnums
-            addToProcessedSeqnums(message.getSeqnum());
-            
-            // Add to queue for processing by the response processor
             messageQueue.put(message);
-            
-            log.info("Added incoming message to processing queue: {}", message.getType());
-        } catch (Exception e) {
-            log.error("Error processing incoming message from UPS", e);
+        } catch (InterruptedException e) {
+            log.error("Error adding message to queue", e);
         }
     }
     
     /**
-     * Handle an acknowledgment received from UPS through the socket server
-     * 
-     * @param ack The acknowledgment received
-     */
-    public void handleIncomingAck(Ack ack) {
-        handleAcknowledgment(ack);
-    }
-    
-    /**
-     * Create an acknowledgment message for the given sequence number
-     * This is used by the UPSSocketServerService to send acknowledgments
-     * 
-     * @param seqNumToAck The sequence number to acknowledge
-     * @return The acknowledgment message
+     * Create an acknowledgment message 
+     * This is maintained for compatibility but we don't verify acks anymore
      */
     public GenericMessage createAcknowledgmentMessage(long seqNumToAck) {
-        Ack ack = Ack.newBuilder().setSeqnum(seqNumToAck).build();
+        Ack ack = Ack.newBuilder()
+                .setSeqnum(seqNumToAck)
+                .build();
         
         return GenericMessage.newBuilder()
                 .setType("ack")
                 .setAck(ack)
                 .build();
+    }
+    
+    /**
+     * Handle acknowledgment received from UPS
+     * This is maintained for compatibility but does nothing now
+     */
+    public void handleIncomingAck(Ack ack) {
+        log.debug("Received ack for seqnum: {} (ignored)", ack.getSeqnum());
     }
 } 
