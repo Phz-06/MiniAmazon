@@ -98,7 +98,7 @@ public class UPSController {
     @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/status")
     public ResponseEntity<Map<String, Object>> getConnectionStatus() {
-        boolean isConnected = upsService.isConnected();
+        boolean isConnected = upsSocketServerService.getClientConnected().get();
         boolean isServerRunning = upsSocketServerService.getServerRunning().get();
         boolean isClientConnected = upsSocketServerService.isUpsClientConnected();
         Integer serverPort = upsSocketServerService.getServerPort();
