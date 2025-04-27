@@ -48,8 +48,11 @@ public class PaymentEventListener {
         Order order = orderService.getOrder(event.getOrderId());
         
         // Generate a unique package ID
-        long getANum = UUID.randomUUID().getMostSignificantBits() & Long.MAX_VALUE;
-        String packageId = String.format("%07d", getANum);
+        //long getANum = UUID.randomUUID().getMostSignificantBits() & Long.MAX_VALUE;
+        long timePart = System.currentTimeMillis() % 10_000; // last 4 digits
+        int randomPart = (int)(Math.random() * 1000); // 0~999
+
+        String packageId = String.format("%04d%03d", timePart, randomPart);
         order.setStatus(Status.PACKING);
         order.setShipmentId(packageId);
         orderService.saveOrder(order);
