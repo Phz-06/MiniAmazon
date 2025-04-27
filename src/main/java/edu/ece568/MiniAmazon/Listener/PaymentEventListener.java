@@ -48,7 +48,8 @@ public class PaymentEventListener {
         Order order = orderService.getOrder(event.getOrderId());
         
         // Generate a unique package ID
-        String packageId = "PKG-" + UUID.randomUUID().toString().substring(0, 8);
+        long getANum = UUID.randomUUID().getMostSignificantBits() & Long.MAX_VALUE;
+        String packageId = String.format("PKG-%07d", getANum);
         order.setStatus(Status.PACKING);
         order.setShipmentId(packageId);
         orderService.saveOrder(order);
@@ -57,7 +58,7 @@ public class PaymentEventListener {
         List<Map<String, Object>> items = new ArrayList<>();
         for (OrderItem item : order.getOrderItems()) {
             Map<String, Object> itemMap = new HashMap<>();
-            itemMap.put("product_id", item.getProduct().getId());
+            itemMap.put("product_id", item.getProduct().getProductId());
             itemMap.put("description", item.getProduct().getName());
             itemMap.put("quantity", item.getQuantity());
             items.add(itemMap);

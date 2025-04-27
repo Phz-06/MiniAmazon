@@ -1,7 +1,10 @@
 package edu.ece568.MiniAmazon.Listener;
 
 import edu.ece568.MiniAmazon.Event.LoadConfirmationEvent;
+import edu.ece568.MiniAmazon.Event.PackageStatusUpdateEvent;
 import edu.ece568.MiniAmazon.Event.ShipmentRequestEvent;
+import edu.ece568.MiniAmazon.model.Status;
+import edu.ece568.MiniAmazon.service.OrderService;
 import edu.ece568.MiniAmazon.service.UPSService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.event.EventListener;
@@ -12,9 +15,11 @@ import org.springframework.stereotype.Service;
 public class UPSEventListener {
 
     private final UPSService upsService;
+    private final OrderService orderService;
 
-    public UPSEventListener(UPSService upsService) {
+    public UPSEventListener(UPSService upsService, OrderService orderService) {
         this.upsService = upsService;
+        this.orderService = orderService;
     }
 
     /**
@@ -23,7 +28,9 @@ public class UPSEventListener {
     @EventListener
     public void handleShipmentRequestEvent(ShipmentRequestEvent event) {
         log.info("Handling shipment request event for package id: {}", event.getPackageId());
-        
+
+
+
         try {
             // Send the shipment request to UPS
             long seqNum = upsService.sendShipmentRequest(
@@ -35,7 +42,7 @@ public class UPSEventListener {
             );
             
             if (seqNum > 0) {
-                log.info("Sent shipment request to UPS for package: {}, seqNum: {}", 
+                log.info("Sent shipment request to UPS for package: {}, seqNum: {}, ",
                         event.getPackageId(), seqNum);
             } else {
                 log.error("Failed to send shipment request to UPS for package: {}", 
@@ -73,5 +80,11 @@ public class UPSEventListener {
             log.error("Error sending load confirmation to UPS for package id: {}, truck id: {}", 
                     event.getPackageId(), event.getTruckId(), e);
         }
+    }
+
+    @EventListener
+    public void handleDeliveredEvent(PackageStatusUpdateEvent event) {
+        log.info("Handling delivered event for package id: {}", event.getPackageId());
+        orderService.setStatus(event.getPackageId(), Status.DELIVERED);
     }
 } 

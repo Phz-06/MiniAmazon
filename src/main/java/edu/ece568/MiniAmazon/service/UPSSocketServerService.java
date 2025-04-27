@@ -26,7 +26,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 @Service
 public class UPSSocketServerService {
 
-    @Value("${amazon.server.port:12345}")
+    @Value("${amazon.server.port:8000}")
     private int serverPort;
     
     private ServerSocket serverSocket;

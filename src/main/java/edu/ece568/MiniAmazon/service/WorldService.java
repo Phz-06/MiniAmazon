@@ -305,9 +305,9 @@ public class WorldService {
 
             // Add the products
             for (Object[] product : products) {
-                long productId = (Long) product[0];
-                int count = (Integer) product[1];
-                String description = (String) product[2];
+                long productId = Long.parseLong((String) product[0]);
+                int count = (Integer) product[2];
+                String description = (String) product[1];
 
                 AProduct.Builder productBuilder = AProduct.newBuilder();
                 productBuilder.setId(productId);

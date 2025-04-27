@@ -21,7 +21,7 @@ public class Order extends AbstractPersistable<Long> {
 
     private LocalDateTime createdAt;
 
-    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL)
+    @OneToMany(fetch = FetchType.EAGER, mappedBy = "order", cascade = CascadeType.ALL)
     private List<OrderItem> orderItems;
 
     @OneToOne(mappedBy = "order", cascade = CascadeType.ALL)
