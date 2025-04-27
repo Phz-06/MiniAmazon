@@ -21,12 +21,14 @@ function logout() {
 
 document.addEventListener("DOMContentLoaded", function() {
     const token = localStorage.getItem("token");
-    if (!token) return;
+    if (!token) {
+        return;
+    }
 
     const payload = Utils.parseJwt(token);
-    if (!payload) return;
-
-    console.log("Decoded JWT Payload:", payload);
+    if (!payload) {
+        return;
+    }
 
     const userNameSpan = document.getElementById("userName");
     if (userNameSpan) {
