@@ -25,16 +25,16 @@ document.addEventListener("DOMContentLoaded", function() {
 
     const payload = Utils.parseJwt(token);
     if (!payload) return;
-
-    // Safe wait until userName and adminButton actually appear
+    
     const userNameSpan = document.getElementById("userName");
-    const adminButton = document.getElementById("adminButton");
-
     if (userNameSpan) {
-        userNameSpan.textContent = payload.username || "User";
+        userNameSpan.textContent = payload.sub || "User";
     }
 
-    if (adminButton && payload.role === "ADMIN") {
-        adminButton.classList.remove("d-none");
+    if (payload.role === "ADMIN") {
+        const adminButton = document.getElementById("adminButton");
+        if (adminButton) {
+            adminButton.classList.remove("d-none");
+        }
     }
 });
