@@ -89,8 +89,9 @@ public class WorldService {
         try {
             this.worldId = worldId;
 
-            //socket = new Socket(host, port);
-            socket = new Socket(worldHost, worldPort);
+            log.info("Connecting to world simulator at {}:{}", worldHost, worldPort);
+            socket = new Socket(host, port);
+            //socket = new Socket(worldHost, worldPort);
             outputStream = socket.getOutputStream();
             inputStream = socket.getInputStream();
 

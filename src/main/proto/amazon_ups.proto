@@ -38,6 +38,7 @@ message ShipmentRequest {
   Coordinates destination = 3;
   string ups_account = 4;
   int64 seqnum = 5;
+  string description = 6; // Description of the package
 }
 
 // Load Confirmation from Amazon to UPS

@@ -54,13 +54,14 @@ public class WorldEventListener {
                     event.getWarehouseId(),
                     event.getDestX(),
                     event.getDestY(),
-                    event.getUpsAccount()
+                    event.getUpsAccount(),
+                    null
             );
             
             // Request the world service to pack the order
             long seqNum = worldService.packOrder(
                     event.getWarehouseId(),
-                    Long.parseLong(event.getPackageId().replace("PKG-", "")), // Convert to a numeric shipment ID
+                    Long.parseLong(event.getPackageId()), // Convert to a numeric shipment ID
                     products
             );
             
@@ -84,7 +85,7 @@ public class WorldEventListener {
         
         try {
             // Parse the package ID to get the numeric shipment ID
-            long shipmentId = Long.parseLong(event.getPackageId().replace("PKG-", ""));
+            int shipmentId = Integer.parseInt(event.getPackageId());
             
             // Request the world service to load the package onto the truck
             long seqNum = worldService.loadPackage(
@@ -92,7 +93,7 @@ public class WorldEventListener {
                     event.getTruckId(),
                     shipmentId
             );
-            
+            worldResponseProcessor.associateTruckWithPackage(event.getPackageId(), event.getTruckId());
             log.info("Sent load request to world service for package: {}, truck: {}, seqNum: {}", 
                     event.getPackageId(), event.getTruckId(), seqNum);
         } catch (Exception e) {

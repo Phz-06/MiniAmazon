@@ -3,7 +3,6 @@ package edu.ece568.MiniAmazon.service;
 import edu.ece568.MiniAmazon.Event.LoadConfirmationEvent;
 import edu.ece568.MiniAmazon.Event.ShipmentRequestEvent;
 import edu.ece568.MiniAmazon.model.Order;
-import edu.ece568.MiniAmazon.model.Product;
 import edu.ece568.MiniAmazon.model.Status;
 import edu.ece568.MiniAmazon.proto.WorldAmazon.AResponses;
 import edu.ece568.MiniAmazon.proto.WorldAmazon.APurchaseMore;
@@ -20,8 +19,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.HashMap;
 import java.util.Map;
-
-import static org.springframework.data.repository.util.ClassUtils.ifPresent;
 
 /**
  * Service to process responses from the World Simulator
@@ -49,9 +46,9 @@ public class WorldResponseProcessor {
     /**
      * Register a package's details for future reference
      */
-    public void registerPackageDetails(String packageId, int warehouseId, int destX, int destY, String upsAccount) {
+    public void registerPackageDetails(String packageId, int warehouseId, int destX, int destY, String upsAccount, Integer truckId) {
         // Convert package ID string to numeric shipment ID
-        long shipmentId = Long.parseLong(packageId.replace("PKG-", ""));
+        long shipmentId = Long.parseLong(packageId);
         
         Map<String, Object> details = new HashMap<>();
         details.put("packageId", packageId);
@@ -59,7 +56,7 @@ public class WorldResponseProcessor {
         details.put("destX", destX);
         details.put("destY", destY);
         details.put("upsAccount", upsAccount);
-        
+        details.put("truckId", truckId);
         packageDetailsMap.put(shipmentId, details);
         log.info("Registered package details for shipment ID: {}, package ID: {}", shipmentId, packageId);
     }
@@ -154,9 +151,10 @@ public class WorldResponseProcessor {
                 log.error("No package details found for shipment ID: {}", shipmentId);
                 return;
             }
-            
+
+            String packageId = (String) packageDetails.get("packageId");
             // Get order and update status in a separate transaction
-            Order order = orderService.getOrderByShipmentId("PKG-" + shipmentId);
+            Order order = orderService.getOrderByShipmentId(packageId);
             if (order == null) {
                 log.error("No order found for shipment ID: {}", shipmentId);
                 return;
@@ -170,7 +168,7 @@ public class WorldResponseProcessor {
             order.setStatus(Status.PACKED);
             orderService.saveOrder(order);
 
-            String packageId = (String) packageDetails.get("packageId");
+            //String packageId = (String) packageDetails.get("packageId");
             int warehouseId = (int) packageDetails.get("warehouseId");
             int destX = (int) packageDetails.get("destX");
             int destY = (int) packageDetails.get("destY");
@@ -218,7 +216,7 @@ public class WorldResponseProcessor {
             log.info("Updating shipment {} status to LOADED", shipmentId);
 
             Integer truckId = (Integer) packageDetails.get("truckId");
-            Order order = orderService.getOrderByShipmentId("PKG-" + shipmentId);
+            Order order = orderService.getOrderByShipmentId(packageId);
             if (order != null) {
                 order.setStatus(Status.LOADED);
                 orderService.saveOrder(order);
@@ -284,7 +282,7 @@ public class WorldResponseProcessor {
     public void associateTruckWithPackage(String packageId, int truckId) {
         try {
             // Convert package ID to shipment ID
-            long shipmentId = Long.parseLong(packageId.replace("PKG-", ""));
+            long shipmentId = Long.parseLong(packageId);
             
             // Update the package details
             Map<String, Object> packageDetails = packageDetailsMap.get(shipmentId);

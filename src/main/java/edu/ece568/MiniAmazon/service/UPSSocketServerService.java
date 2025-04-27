@@ -2,6 +2,7 @@ package edu.ece568.MiniAmazon.service;
 
 import com.google.protobuf.CodedInputStream;
 import com.google.protobuf.CodedOutputStream;
+import edu.ece568.MiniAmazon.proto.Amazon_UPS;
 import edu.ece568.MiniAmazon.proto.Amazon_UPS.GenericMessage;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -28,97 +29,109 @@ public class UPSSocketServerService {
 
     @Value("${amazon.server.port:8090}")
     private int serverPort;
-    
+
+    @Getter
+    private int actualPort;
+
     private ServerSocket serverSocket;
     private Socket upsClientSocket;
     private InputStream inputStream;
     private OutputStream outputStream;
-    
+    private CodedInputStream codedInputStream;
+
     private Thread serverThread;
     private Thread messageListenerThread;
-    
+
     @Getter
     private final AtomicBoolean serverRunning = new AtomicBoolean(false);
-    
+
     @Getter
     private final AtomicBoolean clientConnected = new AtomicBoolean(false);
-    
-    // Queue for messages received from UPS
+
     private final BlockingQueue<GenericMessage> incomingMessageQueue = new LinkedBlockingQueue<>();
-    
+
     private final UPSService upsService;
-    
+
     public UPSSocketServerService(UPSService upsService) {
         this.upsService = upsService;
     }
-    
-    /**
-     * Start the TCP server to listen for UPS connections
-     * 
-     * @param port The port to listen on (optional, defaults to application property)
-     * @return true if server started successfully
-     */
+
     @Async
     public boolean startServer(Integer port) {
         if (serverRunning.get()) {
-            log.info("UPS socket server is already running");
+            log.info("UPS socket server is already running on port {}", actualPort);
             return true;
         }
-        
-        try {
-            int listenPort = (port != null) ? port : serverPort;
-            serverSocket = new ServerSocket(listenPort);
-            serverRunning.set(true);
-            
-            log.info("UPS socket server started on port {}", listenPort);
-            
-            // Start server thread to accept connections
-            serverThread = new Thread(this::acceptConnections);
-            serverThread.setDaemon(true);
-            serverThread.start();
-            
-            return true;
-        } catch (IOException e) {
-            log.error("Failed to start UPS socket server", e);
-            return false;
+
+        int listenPort = (port != null) ? port : serverPort;
+        int maxRetries = 5;
+
+        for (int attempt = 0; attempt < maxRetries; attempt++) {
+            try {
+                log.info("Attempting to start UPS socket server on port {}", listenPort);
+                serverSocket = new ServerSocket(listenPort, 50, java.net.InetAddress.getByName("0.0.0.0"));
+                serverRunning.set(true);
+                actualPort = listenPort;
+
+                log.info("UPS socket server started successfully on port {}", actualPort);
+
+                serverThread = new Thread(this::acceptConnections);
+                serverThread.setDaemon(true);
+                serverThread.start();
+
+                return true;
+            } catch (java.net.BindException e) {
+                log.warn("Port {} already in use, trying next port", listenPort);
+                listenPort++;
+            } catch (IOException e) {
+                log.error("Failed to start UPS socket server", e);
+                return false;
+            }
         }
+
+        log.error("Failed to start UPS socket server after {} attempts", maxRetries);
+        return false;
     }
-    
-    /**
-     * Accept connections from UPS
-     */
+
+    public Integer getServerPort() {
+        if (!serverRunning.get()) {
+            return null;
+        }
+        return actualPort;
+    }
+
     private void acceptConnections() {
         while (serverRunning.get() && !serverSocket.isClosed()) {
             try {
-                log.info("Waiting for UPS to connect...");
-                Socket clientSocket = serverSocket.accept();
-                
-                // Handle only one connection at a time
-                handleUpsConnection(clientSocket);
+                if (!clientConnected.get()) {
+                    log.info("Waiting for UPS to connect...");
+                    Socket clientSocket = serverSocket.accept();
+                    handleUpsConnection(clientSocket);
+                } else {
+                    Thread.sleep(5000);
+                }
             } catch (IOException e) {
                 if (serverRunning.get()) {
                     log.error("Error accepting UPS connection", e);
                 }
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                log.warn("Accept connection thread interrupted");
             }
         }
     }
-    
-    /**
-     * Handle a connection from UPS
-     */
+
     private synchronized void handleUpsConnection(Socket clientSocket) {
-        // Close existing connection if any
         closeClientConnection();
-        
+
         try {
             this.upsClientSocket = clientSocket;
             this.inputStream = clientSocket.getInputStream();
             this.outputStream = clientSocket.getOutputStream();
-            
+            this.codedInputStream = CodedInputStream.newInstance(inputStream);
             log.info("UPS connected from {}", clientSocket.getInetAddress());
             clientConnected.set(true);
-            
-            // Start message listener thread
+
             messageListenerThread = new Thread(this::listenForMessages);
             messageListenerThread.setDaemon(true);
             messageListenerThread.start();
@@ -127,32 +140,25 @@ public class UPSSocketServerService {
             closeClientConnection();
         }
     }
-    
-    /**
-     * Listen for messages from the connected UPS client
-     */
+
     private void listenForMessages() {
         while (clientConnected.get() && !upsClientSocket.isClosed()) {
             try {
                 GenericMessage message = receiveMessage();
-                
-                // Process the received message
-                log.info("Received message from UPS: {}", message.getType());
-                
 
-                if (message.hasAck()) {
-                    upsService.handleIncomingAck(message.getAck());
-                    continue;
-                }
+                log.info("Received message from UPS: {}", message.getType());
+
+//                if (message.hasAck()) {
+//                    upsService.handleIncomingAck(message.getAck());
+//                    continue;
+//                }
 
                 sendAcknowledgment(message.getSeqnum());
-                
-                // Add to queue for processing
+
                 incomingMessageQueue.put(message);
-                
-                // Forward to UPS service for processing
-                upsService.processIncomingMessage(message);
-                
+
+                //upsService.processIncomingMessage(message);
+
             } catch (Exception e) {
                 if (clientConnected.get()) {
                     log.error("Error receiving messages from UPS", e);
@@ -161,75 +167,101 @@ public class UPSSocketServerService {
                 break;
             }
         }
+        clientConnected.set(false);
     }
-    
-    /**
-     * Send an acknowledgment for a received message
-     * This is maintained for protocol compatibility
-     */
+
     private void sendAcknowledgment(long seqNumToAck) throws IOException {
         GenericMessage ackMessage = upsService.createAcknowledgmentMessage(seqNumToAck);
         sendMessage(ackMessage);
         log.debug("Sent acknowledgment for seqnum: {} (for compatibility)", seqNumToAck);
     }
-    
-    /**
-     * Get the next message from the queue
-     */
+
+    public long sendShipmentRequest(String packageId, int warehouseId, int destX, int destY, String upsAccount) {
+        long msgSeqNum = 1;
+
+        Amazon_UPS.ShipmentRequest.Builder builder = Amazon_UPS.ShipmentRequest.newBuilder()
+                .setPackageId(packageId)
+                .setWarehouseId(warehouseId)
+                .setDestination(Amazon_UPS.Coordinates.newBuilder().setX(destX).setY(destY).build())
+                .setSeqnum(msgSeqNum);
+
+        if (upsAccount != null && !upsAccount.isEmpty()) {
+            builder.setUpsAccount(upsAccount);
+        }
+
+        GenericMessage message = GenericMessage.newBuilder()
+                .setType("shipment_request")
+                .setSeqnum(msgSeqNum)
+                .setShipmentRequest(builder.build())
+                .build();
+
+        try {
+            // No longer store for retries
+            sendMessage(message);
+            log.info("Sent shipment request for package: {}, seqnum: {}", packageId, msgSeqNum);
+            return msgSeqNum;
+        } catch (Exception e) {
+            log.error("Failed to send shipment request for package: {}", packageId, e);
+            return -1;
+        }
+    }
+
+    public long sendLoadConfirmation(String packageId, int truckId) {
+        long msgSeqNum = 1;
+
+        Amazon_UPS.LoadConfirmation loadConfirmation = Amazon_UPS.LoadConfirmation.newBuilder()
+                .setPackageId(packageId)
+                .setTruckId(truckId)
+                .setSeqnum(msgSeqNum)
+                .build();
+
+        GenericMessage message = GenericMessage.newBuilder()
+                .setType("load_confirmation")
+                .setSeqnum(msgSeqNum)
+                .setLoadConfirmation(loadConfirmation)
+                .build();
+
+        try {
+            sendMessage(message);
+            log.info("Sent load confirmation for package: {}, truck: {}, seqnum: {}",
+                    packageId, truckId, msgSeqNum);
+            return msgSeqNum;
+        } catch (Exception e) {
+            log.error("Failed to send load confirmation for package: {}, truck: {}",
+                    packageId, truckId, e);
+            return -1;
+        }
+    }
+
     public GenericMessage getNextIncomingMessage() {
         return incomingMessageQueue.poll();
     }
-    
-    /**
-     * Send a message to the connected UPS client
-     */
+
     public void sendMessage(GenericMessage message) throws IOException {
         if (outputStream == null || !clientConnected.get()) {
             throw new IOException("No UPS client connected");
         }
-        
-        // Get size of message
+
         int size = message.getSerializedSize();
-        
-        // Create coded output stream
         CodedOutputStream codedOutputStream = CodedOutputStream.newInstance(outputStream);
-        
-        // Write size as varint32
+
         codedOutputStream.writeUInt32NoTag(size);
-        
-        // Write message
         message.writeTo(codedOutputStream);
-        
-        // Flush data
         codedOutputStream.flush();
-        
+
         log.debug("Sent message to UPS client: {}", message.getType());
     }
-    
-    /**
-     * Receive a message from the connected UPS client
-     */
+
     private GenericMessage receiveMessage() throws IOException {
-        if (inputStream == null || !clientConnected.get()) {
+        if (codedInputStream == null || !clientConnected.get()) {
             throw new IOException("No UPS client connected");
         }
-        
-        // Create coded input stream
-        CodedInputStream codedInputStream = CodedInputStream.newInstance(inputStream);
-        
-        // Read size
+
         int size = codedInputStream.readUInt32();
-        
-        // Read message
         byte[] messageBytes = codedInputStream.readRawBytes(size);
-        
-        // Parse message
         return GenericMessage.parseFrom(messageBytes);
     }
-    
-    /**
-     * Close the connection to the UPS client
-     */
+
     private void closeClientConnection() {
         if (upsClientSocket != null && !upsClientSocket.isClosed()) {
             try {
@@ -241,22 +273,17 @@ public class UPSSocketServerService {
                 upsClientSocket = null;
                 inputStream = null;
                 outputStream = null;
+                codedInputStream = null;
                 clientConnected.set(false);
             }
         }
     }
-    
-    /**
-     * Stop the server
-     */
+
     @PreDestroy
     public void stopServer() {
         serverRunning.set(false);
-        
-        // Close client connection
         closeClientConnection();
-        
-        // Close server socket
+
         if (serverSocket != null && !serverSocket.isClosed()) {
             try {
                 serverSocket.close();
@@ -266,11 +293,8 @@ public class UPSSocketServerService {
             }
         }
     }
-    
-    /**
-     * Check if a UPS client is connected
-     */
+
     public boolean isUpsClientConnected() {
         return clientConnected.get();
     }
-} 
+}

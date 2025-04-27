@@ -27,13 +27,15 @@ public class UPSResponseProcessor {
     private final EventPublisher eventPublisher;
     private final WorldService worldService;
     private final OrderService orderService;
+    private final UPSSocketServerService upsSocketServerService;
 
     @Autowired
-    public UPSResponseProcessor(UPSService upsService, EventPublisher eventPublisher, WorldService worldService, OrderService orderService) {
+    public UPSResponseProcessor(UPSService upsService, EventPublisher eventPublisher, WorldService worldService, OrderService orderService, UPSSocketServerService upsSocketServerService) {
         this.upsService = upsService;
         this.eventPublisher = eventPublisher;
         this.worldService = worldService;
         this.orderService = orderService;
+        this.upsSocketServerService = upsSocketServerService;
     }
 
     /**
@@ -42,11 +44,11 @@ public class UPSResponseProcessor {
      */
     @Scheduled(fixedDelay = 100)
     public void processResponses() {
-        if (!upsService.isConnected()) {
+        if (!upsSocketServerService.getClientConnected().get()) {
             return;
         }
 
-        GenericMessage message = upsService.getNextMessage();
+        GenericMessage message = upsSocketServerService.getNextIncomingMessage();
         if (message == null) {
             return;
         }
@@ -79,7 +81,7 @@ public class UPSResponseProcessor {
     private void processTruckAssignment(TruckAssignment truckAssignment) {
         String packageId = truckAssignment.getPackageId();
         int truckId = truckAssignment.getTruckId();
-        Order order = orderService.getOrderByShipmentId("PKG-" + packageId);
+        Order order = orderService.getOrderByShipmentId(packageId);
         if (order != null) {
             order.setTruckId(truckId);
             order.setStatus(Status.LOADING);
