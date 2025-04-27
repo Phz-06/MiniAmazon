@@ -49,6 +49,7 @@ public class WebSecurityConfig {
                                 "/catalog",
                                 "/product/**",
                                 "/cart",
+                                "/orders",
                                 "/checkout",
                                 "/css/**",
                                 "/js/**",
