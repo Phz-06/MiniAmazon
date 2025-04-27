@@ -42,7 +42,7 @@
 function getProductIdFromUrl() {
     const parts = window.location.pathname.split("/");
     const id = parts[2]; // /product/{id}
-    if (!id || isNaN(id)) {
+    if (!id) {
         return null;
     }
     return id;

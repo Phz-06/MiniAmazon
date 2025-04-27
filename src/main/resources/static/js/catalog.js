@@ -30,7 +30,7 @@ async function loadProducts() {
             card.className = "col";
 
             card.innerHTML = `
-            <div class="card h-100 shadow-sm" style="background-color: ${color}; cursor: pointer;" onclick="goToProduct(${p.id})">
+            <div class="card h-100 shadow-sm" style="background-color: ${color}; cursor: pointer;" onclick="goToProduct('${p.productID}')">
               <img src="${imgUrl}" class="card-img-top" alt="${p.name}" style="object-fit: cover; height: 200px;">
               <div class="card-body d-flex flex-column">
                 <h5 class="card-title">${p.name}</h5>
