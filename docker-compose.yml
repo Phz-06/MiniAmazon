@@ -16,7 +16,7 @@ services:
     depends_on:
       - postgres
     ports:
-      - "8000:8000"
+      - "8000:8090"
     environment:
       - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/amazon
       - SPRING_DATASOURCE_USERNAME=amazonuser
