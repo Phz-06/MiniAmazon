@@ -120,4 +120,15 @@ public class OrderController {
         return ResponseEntity.ok(response);
     }
 
+    @PreAuthorize("@orderSecurity.isOrderOwner(#orderId)")
+    @GetMapping("/{orderId}/shipmentId")
+    public ResponseEntity<Map<String, String>> getShipmentId(@PathVariable Long orderId) throws AccessDeniedException {
+        Order order = orderService.getOrder(orderId);
+        Map<String, String> response = Map.of(
+                "orderId", String.valueOf(orderId),
+                "shipmentId", order.getShipmentId()
+        );
+        return ResponseEntity.ok(response);
+    }
+
 }
