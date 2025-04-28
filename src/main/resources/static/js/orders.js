@@ -56,7 +56,8 @@ async function loadOrders() {
             let itemsHtml = "<ul>";
             if (order.orderItems && order.orderItems.length > 0) {
                 for (const item of order.orderItems) {
-                    itemsHtml += `<li>${item.productName} x ${item.quantity}</li>`;
+                    let itemName = (item.product && item.product.name) || "Unknown Item";
+                    itemsHtml += `<li>${itemName} x ${item.quantity}</li>`;
                 }
             } else {
                 itemsHtml += "<li class='text-muted'>No items listed</li>";
