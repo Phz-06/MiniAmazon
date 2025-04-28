@@ -37,19 +37,19 @@ async function loadOrders() {
             const div = document.createElement("div");
             div.className = "card p-3 mb-3 shadow-sm";
 
-            // Try to get tracking number
-            let trackingNumber = null;
+            // Try to get shipment ID
+            let shipmentId = null;
             try {
-                const trackRes = await fetch(`/api/packages/order/${order.id}`, {
+                const shipmentRes = await fetch(`/api/orders/${order.id}/shipmentId`, {
                     method: "GET",
                     headers: getAuthHeaders()
                 });
-                if (trackRes.ok) {
-                    const packageInfo = await trackRes.json();
-                    trackingNumber = packageInfo.trackingNumber;
+                if (shipmentRes.ok) {
+                    const shipmentInfo = await shipmentRes.json();
+                    shipmentId = shipmentInfo.shipmentId;
                 }
             } catch (err) {
-                console.warn(`Failed to fetch tracking number for order ${order.id}`, err);
+                console.warn(`Failed to fetch shipment ID for order ${order.id}`, err);
             }
 
             // Build item list
@@ -69,7 +69,7 @@ async function loadOrders() {
                     <div>
                         <h5>Order #${order.id}</h5>
                         <p>Status: <strong>${order.status}</strong></p>
-                        ${trackingNumber ? `<p>Tracking: <code>${trackingNumber}</code></p>` : `<p class="text-muted">No tracking yet</p>`}
+                        ${shipmentId ? `<p>Tracking: <code>${shipmentId}</code></p>` : `<p class="text-muted">No tracking yet</p>`}
                         <h6>Items:</h6>
                         ${itemsHtml}
                     </div>
