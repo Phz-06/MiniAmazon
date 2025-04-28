@@ -69,7 +69,7 @@ async function loadOrders() {
                     <div>
                         <h5>Order #${order.id}</h5>
                         <p>Status: <strong>${order.status}</strong></p>
-                        ${shipmentId ? `<p>Tracking: <code>${shipmentId}</code></p>` : `<p class="text-muted">No tracking yet</p>`}
+                        ${shipmentId ? `<p>Shipment ID: <code>${shipmentId}</code></p>` : `<p class="text-muted">No tracking yet</p>`}
                         <h6>Items:</h6>
                         ${itemsHtml}
                     </div>
