@@ -37,11 +37,40 @@ async function loadOrders() {
             const div = document.createElement("div");
             div.className = "card p-3 mb-3 shadow-sm";
 
+            // Try to get tracking number
+            let trackingNumber = null;
+            try {
+                const trackRes = await fetch(`/api/packages/order/${order.id}`, {
+                    method: "GET",
+                    headers: getAuthHeaders()
+                });
+                if (trackRes.ok) {
+                    const packageInfo = await trackRes.json();
+                    trackingNumber = packageInfo.trackingNumber;
+                }
+            } catch (err) {
+                console.warn(`Failed to fetch tracking number for order ${order.id}`, err);
+            }
+
+            // Build item list
+            let itemsHtml = "<ul>";
+            if (order.orderItems && order.orderItems.length > 0) {
+                for (const item of order.orderItems) {
+                    itemsHtml += `<li>${item.productName} x ${item.quantity}</li>`;
+                }
+            } else {
+                itemsHtml += "<li class='text-muted'>No items listed</li>";
+            }
+            itemsHtml += "</ul>";
+
             div.innerHTML = `
                 <div class="d-flex justify-content-between align-items-center">
                     <div>
                         <h5>Order #${order.id}</h5>
                         <p>Status: <strong>${order.status}</strong></p>
+                        ${trackingNumber ? `<p>Tracking: <code>${trackingNumber}</code></p>` : `<p class="text-muted">No tracking yet</p>`}
+                        <h6>Items:</h6>
+                        ${itemsHtml}
                     </div>
                     <div>
                         ${order.status === "CREATED" || order.status === "CONFIRMED" ? `
