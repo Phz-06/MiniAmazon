@@ -18,3 +18,12 @@ We implemented role-based access control where only users with the admin role ca
 
 ## 7. Amazon-Like User Interface
 We designed our Amazon frontend with a focus on replicating the familiar look and feel of the real Amazon website. Through thoughtful layout, intuitive design patterns, and consistent styling, we delivered a user experience that feels professional and comfortable. While UI/UX was not a graded component, a polished frontend makes the project stand out, and better demonstrates the quality of our work.
+
+## 8. Mock Payment with Credit Card Input
+Our Amazon frontend implements a mock payment system that requires users to enter a credit card number at checkout. Although the project specification explicitly stated that a payment system was not necessary, we chose to add a realistic payment step to enhance the authenticity of the shopping experience. By requiring credit card input, our system mirrors the workflow of real-world e-commerce platforms more closely, providing a professional and immersive checkout process that goes beyond the base requirements.
+
+## 9. Amazon-to-UPS Connection
+In our implementation, the Amazon server is capable of actively initiating a connection to the UPS server, rather than passively waiting for UPS to connect first. While the basic project requirements only required UPS to connect to Amazon, we extended the functionality to allow Amazon to proactively establish the communication channel as well.
+
+## 10. Product Searching, Sorting & Filtering
+Our Amazon frontend offers product sorting and filtering capabilities, allowing users to refine their shopping experience based on criteria such as product name, price, or other attributes. While the project specification required only a basic searchable catalog, it did not mandate any sorting or filtering features. By providing advanced browsing options, we greatly improve the usability and realism of the shopping interface, bringing it closer to the experience users expect from professional e-commerce platforms.
