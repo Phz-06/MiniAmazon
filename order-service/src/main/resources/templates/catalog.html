@@ -1,18 +1,31 @@
-﻿<div th:fragment="content">
-  <div class="container mt-4">
-    <!-- Search + Filter Form -->
-    <form class="d-flex mb-4" onsubmit="event.preventDefault(); loadProducts();">
-      <select id="categoryFilter" class="form-select me-2" style="max-width: 160px;" onchange="loadProducts()">
-        <option value="">All Categories</option>
-        <!-- Categories dynamically filled -->
-      </select>
-      <input id="searchInput" class="form-control me-2" type="search" placeholder="Search products..." oninput="searchProducts()" />
-      <button class="btn btn-primary" type="button" onclick="loadProducts()">Search</button>
-    </form>
-
-    <!-- Product List -->
-    <div id="productList" class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-3">
-      <!-- Products dynamically filled -->
+﻿<div th:fragment="content" class="container page">
+  <div class="page-head">
+    <div>
+      <h1>Shop the catalog</h1>
+      <p id="resultCount" aria-live="polite">Loading products…</p>
     </div>
   </div>
+
+  <form id="filters" class="filters" role="search">
+    <div class="field filters__search">
+      <label class="visually-hidden" for="searchInput">Search products</label>
+      <div class="input-group input-group--leading">
+        <svg class="icon input-group__icon" aria-hidden="true"><use href="#i-search"/></svg>
+        <input id="searchInput" class="input" type="search" placeholder="Search by name or description" autocomplete="off">
+      </div>
+    </div>
+    <div class="field filters__sort">
+      <label class="visually-hidden" for="sortSelect">Sort by</label>
+      <select id="sortSelect" class="select">
+        <option value="featured">Sort: Featured</option>
+        <option value="price-asc">Price: low to high</option>
+        <option value="price-desc">Price: high to low</option>
+        <option value="name">Name: A to Z</option>
+      </select>
+    </div>
+  </form>
+
+  <div id="categoryChips" class="chips" role="group" aria-label="Filter by category"></div>
+
+  <div id="productList" class="product-grid" aria-busy="true"></div>
 </div>

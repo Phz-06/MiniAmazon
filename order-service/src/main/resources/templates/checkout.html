@@ -1,34 +1,86 @@
-﻿<div th:fragment="content">
-  <div class="container mt-4">
-    <h2>Checkout</h2>
+﻿<div th:fragment="content" class="container page">
+  <a class="back-link" href="/cart">
+    <svg class="icon" aria-hidden="true"><use href="#i-arrow-left"/></svg>
+    Back to cart
+  </a>
 
-    <form id="checkoutForm" class="row g-3">
-      <div class="col-md-6">
-        <label for="deliveryX" class="form-label">Delivery X</label>
-        <input type="number" class="form-control" id="deliveryX" required>
-      </div>
-      <div class="col-md-6">
-        <label for="deliveryY" class="form-label">Delivery Y</label>
-        <input type="number" class="form-control" id="deliveryY" required>
-      </div>
-      <div class="col-md-12">
-        <label for="upsAccountName" class="form-label">UPS Account Name</label>
-        <input type="text" class="form-control" id="upsAccountName" required>
-      </div>
-      <div class="col-md-12">
-        <label for="creditCardNumber" class="form-label">Credit Card Number</label>
-        <input type="text" class="form-control" id="creditCardNumber" required>
-      </div>
-      <div class="col-12">
-        <button type="button" class="btn btn-primary" onclick="checkout()">Place Order</button>
+  <div class="page-head">
+    <div>
+      <h1>Checkout</h1>
+      <p>Placing the order reserves the stock, takes payment and sends it to the warehouse for packing.</p>
+    </div>
+  </div>
+
+  <div id="checkoutEmpty" class="card" hidden></div>
+
+  <div id="checkoutView" class="split">
+    <form id="checkoutForm" class="card" novalidate>
+      <div class="card__body stack" style="gap: var(--space-6)">
+        <div id="formAlert" tabindex="-1"></div>
+
+        <fieldset>
+          <legend>1. Delivery point</legend>
+          <div class="form-grid form-grid--keep">
+            <div class="field">
+              <label class="field__label" for="deliveryX">X coordinate</label>
+              <input class="input" type="number" step="1" inputmode="numeric" id="deliveryX" required
+                     aria-describedby="coordHint" data-hint="coordHint">
+            </div>
+            <div class="field">
+              <label class="field__label" for="deliveryY">Y coordinate</label>
+              <input class="input" type="number" step="1" inputmode="numeric" id="deliveryY" required
+                     aria-describedby="coordHint" data-hint="coordHint">
+            </div>
+          </div>
+          <p id="coordHint" class="field__hint" style="margin-top: var(--space-2)">
+            Addresses here are points on a grid. Whole numbers only.
+          </p>
+          <figure id="route" class="route" style="margin-inline: 0; margin-bottom: 0" hidden>
+            <svg id="routeMap" role="img" aria-labelledby="routeCaption"></svg>
+            <figcaption id="routeCaption" class="route__caption"></figcaption>
+          </figure>
+        </fieldset>
+
+        <fieldset>
+          <legend>2. Carrier</legend>
+          <div class="field">
+            <label class="field__label" for="upsAccountName">UPS account name <span class="optional">(optional)</span></label>
+            <input class="input" type="text" id="upsAccountName" autocomplete="off"
+                   aria-describedby="upsHint" data-hint="upsHint">
+            <p id="upsHint" class="field__hint">Links the package to your UPS account so you can follow it there too.</p>
+          </div>
+        </fieldset>
+
+        <fieldset>
+          <legend>3. Payment</legend>
+          <div class="field">
+            <label class="field__label" for="creditCardNumber">Card number</label>
+            <div class="input-group input-group--leading">
+              <svg class="icon input-group__icon" aria-hidden="true"><use href="#i-card"/></svg>
+              <input class="input" type="text" inputmode="numeric" autocomplete="cc-number" id="creditCardNumber" required
+                     aria-describedby="cardHint" data-hint="cardHint">
+            </div>
+            <p id="cardHint" class="field__hint">Payment is simulated in this shop. No card is charged.</p>
+          </div>
+        </fieldset>
       </div>
     </form>
 
-    <h4 class="mt-5">Cart Summary</h4>
-    <div id="cartSummary" class="list-group"></div>
-
-    <div class="mt-4">
-      <strong>Total Amount: $<span id="cartTotal">0.00</span></strong>
-    </div>
+    <aside class="card split__aside" aria-label="Order summary">
+      <div class="card__body">
+        <h2>Order summary</h2>
+        <ul id="cartSummary" class="line-list" style="margin-top: var(--space-3)">
+          <li class="skeleton" style="height: 3rem"></li>
+        </ul>
+        <div class="summary-row summary-row--total">
+          <span>Total</span>
+          <span id="cartTotal" class="num">$0.00</span>
+        </div>
+        <button id="placeOrder" type="submit" form="checkoutForm" class="btn btn--buy btn--lg btn--block" style="margin-top: var(--space-4)" disabled>
+          Place order
+        </button>
+        <p id="placeStatus" class="muted small" style="margin-top: var(--space-2)" aria-live="polite"></p>
+      </div>
+    </aside>
   </div>
 </div>

@@ -1,42 +1,98 @@
-<div th:fragment="content">
-  <div class="container mt-4">
-    <h2 class="mb-4">Warehouse</h2>
-
-    <!-- Status -->
-    <div class="card mb-4">
-      <div class="card-body">
-        <h5 class="card-title">Status</h5>
-        <p class="text-muted small mb-2">
-          The connection to the world belongs to the world-gateway service, which joins or creates
-          its world on its own. This shows which world the stock figures describe.
-        </p>
-        <button class="btn btn-info" onclick="loadStatus()">Refresh</button>
-        <div id="worldStatus" class="mt-2 text-muted small"></div>
-      </div>
+<div th:fragment="content" class="container page">
+  <div class="page-head">
+    <div>
+      <h1>Warehouse</h1>
+      <p>Stock levels as the shop sees them, and the world they describe.</p>
     </div>
+    <button id="refreshStatus" type="button" class="btn btn--secondary btn--sm">
+      <svg class="icon" aria-hidden="true"><use href="#i-refresh"/></svg>
+      Refresh
+    </button>
+  </div>
 
-    <!-- Buy Product -->
-    <div class="card mb-4">
-      <div class="card-body">
-        <h5 class="card-title">Order Stock</h5>
-        <p class="text-muted small mb-2">Stock becomes sellable when the warehouse reports it arrived.</p>
-        <div class="row g-2">
-          <div class="col-md-3">
-            <input type="number" id="buyWarehouseId" class="form-control" placeholder="Warehouse ID" value="1">
+  <div class="stack" style="gap: var(--space-5)">
+    <section class="stats" aria-label="Status">
+      <div class="card stat">
+        <p class="stat__label">World</p>
+        <p class="stat__value" id="statWorld">–</p>
+        <p class="stat__note">Joined or created by world-gateway</p>
+      </div>
+      <div class="card stat">
+        <p class="stat__label">Messages waiting</p>
+        <p class="stat__value" id="statPending">–</p>
+        <p class="stat__note">In the outbox, not yet published</p>
+      </div>
+      <div class="card stat">
+        <p class="stat__label">Units in stock</p>
+        <p class="stat__value" id="statUnits">–</p>
+        <p class="stat__note" id="statProducts">&nbsp;</p>
+      </div>
+      <div class="card stat">
+        <p class="stat__label">Running low</p>
+        <p class="stat__value" id="statLow">–</p>
+        <p class="stat__note">Products with 10 units or fewer</p>
+      </div>
+    </section>
+
+    <section class="card" aria-labelledby="buyTitle">
+      <div class="card__head">
+        <h2 id="buyTitle">Order stock</h2>
+        <span class="muted small">Stock becomes sellable when the warehouse reports it arrived.</span>
+      </div>
+      <form id="buyForm" class="card__body stack" novalidate>
+        <div id="buyAlert"></div>
+        <div class="form-grid form-grid--buy">
+          <div class="field">
+            <label class="field__label" for="buyWarehouseId">Warehouse ID</label>
+            <input type="number" id="buyWarehouseId" class="input" value="1" min="1" step="1" required>
           </div>
-          <div class="col-md-3">
-            <input type="number" id="buyProductId" class="form-control" placeholder="Product ID">
+          <div class="field">
+            <label class="field__label" for="buyProductId">Product ID</label>
+            <input type="number" id="buyProductId" class="input" min="0" step="1" required>
           </div>
-          <div class="col-md-4">
-            <input type="text" id="buyDescription" class="form-control" placeholder="Description">
+          <div class="field form-grid__wide">
+            <label class="field__label" for="buyDescription">Description</label>
+            <input type="text" id="buyDescription" class="input" required>
           </div>
-          <div class="col-md-2">
-            <input type="number" id="buyCount" class="form-control" placeholder="Count">
+          <div class="field">
+            <label class="field__label" for="buyCount">Units</label>
+            <input type="number" id="buyCount" class="input" min="1" step="1" required>
           </div>
         </div>
-        <button class="btn btn-primary mt-2" onclick="buyProduct()">Buy</button>
-        <div id="buyStatus" class="mt-2 text-muted small"></div>
+        <div>
+          <button id="buyButton" type="submit" class="btn btn--primary">Order stock</button>
+        </div>
+      </form>
+    </section>
+
+    <section class="card" aria-labelledby="inventoryTitle">
+      <div class="card__head">
+        <h2 id="inventoryTitle">Inventory</h2>
+        <div class="field" style="width: min(280px, 100%)">
+          <label class="visually-hidden" for="inventorySearch">Search inventory</label>
+          <div class="input-group input-group--leading">
+            <svg class="icon input-group__icon" aria-hidden="true"><use href="#i-search"/></svg>
+            <input id="inventorySearch" class="input" type="search" placeholder="Search products" autocomplete="off">
+          </div>
+        </div>
       </div>
-    </div>
+      <div class="table-wrap">
+        <table class="table">
+          <thead>
+            <tr>
+              <th scope="col">SKU</th>
+              <th scope="col">Product</th>
+              <th scope="col">Category</th>
+              <th scope="col" class="right">Price</th>
+              <th scope="col" class="right">In stock</th>
+              <th scope="col"><span class="visually-hidden">Actions</span></th>
+            </tr>
+          </thead>
+          <tbody id="inventoryRows">
+            <tr><td colspan="6"><div class="skeleton" style="height: 1.25rem"></div></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
   </div>
 </div>

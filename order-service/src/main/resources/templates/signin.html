@@ -1,25 +1,31 @@
-﻿<div th:fragment="content" style="display: flex; align-items: center; justify-content: center; min-height: 100vh;">
-  <main class="form-signin text-center w-100 m-auto" style="max-width: 400px; padding: 15px;">
-    <form id="signinForm">
-      <i class="bi bi-amazon mb-4" style="font-size: 3rem;"></i>
-      <h1 class="h3 mb-3 fw-normal">Please sign in</h1>
-
-      <div class="form-floating mb-2">
-        <input type="text" class="form-control" id="inputUsername" placeholder="Username" required autofocus>
-        <label for="inputUsername">Username</label>
+﻿<div th:fragment="content" class="auth">
+  <div class="card auth__card">
+    <form id="signinForm" class="card__body" novalidate>
+      <div>
+        <h1>Sign in</h1>
+        <p class="auth__lead">Pick up your cart and follow your orders.</p>
       </div>
 
-      <div class="form-floating mb-2">
-        <input type="password" class="form-control" id="inputPassword" placeholder="Password" required>
-        <label for="inputPassword">Password</label>
+      <div id="formAlert" tabindex="-1"></div>
+
+      <div class="field">
+        <label class="field__label" for="inputUsername">Username</label>
+        <input type="text" class="input" id="inputUsername" autocomplete="username" autocapitalize="none" spellcheck="false" required autofocus>
       </div>
 
-      <div class="mt-3 mb-3">
-        <span>New customer? <a href="/register">Start here.</a></span>
+      <div class="field">
+        <label class="field__label" for="inputPassword">Password</label>
+        <div class="input-group">
+          <input type="password" class="input" id="inputPassword" autocomplete="current-password" required>
+          <button type="button" class="input-group__btn" data-toggle-password="inputPassword" aria-label="Show password" aria-pressed="false">
+            <svg class="icon" aria-hidden="true"><use href="#i-eye"/></svg>
+          </button>
+        </div>
       </div>
 
-      <button class="w-100 btn btn-lg btn-primary" type="submit">Sign in</button>
-      <p class="mt-5 mb-3 text-muted">&copy; 2025, Mini-Amazon</p>
+      <button id="signinButton" class="btn btn--primary btn--lg btn--block" type="submit">Sign in</button>
+
+      <p class="auth__switch">New here? <a href="/register">Create an account</a></p>
     </form>
-  </main>
+  </div>
 </div>

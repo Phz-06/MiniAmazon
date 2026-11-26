@@ -1,19 +1,27 @@
-﻿<nav class="navbar navbar-expand-lg navbar-dark bg-dark px-3" th:fragment="navbar">
-  <a class="navbar-brand d-flex align-items-center" href="/catalog">
-    <i class="bi bi-amazon"></i> &nbsp; Mini-Amazon
-  </a>
+﻿<header class="site-header" th:fragment="navbar">
+  <div class="container site-header__inner">
+    <a class="brand" href="/catalog">
+      <span class="brand__mark"><svg class="icon" aria-hidden="true"><use href="#i-package"/></svg></span>
+      MiniAmazon
+    </a>
 
-  <div class="ms-3 d-flex gap-3">
-    <a class="btn btn-outline-light btn-sm" href="/catalog">Home</a>
-    <a class="btn btn-outline-light btn-sm" href="/cart">Cart</a>
-    <a class="btn btn-outline-light btn-sm" href="/orders">Orders</a>
-    <button id="adminButton" class="btn btn-outline-warning btn-sm d-none" onclick="window.location.href='/admin'">Admin</button>
-  </div>
+    <nav class="site-nav" aria-label="Main">
+      <a class="site-nav__link" href="/catalog" data-nav="/catalog /product">Shop</a>
+      <a class="site-nav__link" href="/cart" data-nav="/cart /checkout">
+        Cart
+        <span id="cartCount" class="count-badge" hidden></span>
+      </a>
+      <a class="site-nav__link" href="/orders" data-nav="/orders">Orders</a>
+      <a id="adminLink" class="site-nav__link" href="/admin" data-nav="/admin" hidden>Warehouse</a>
+    </nav>
 
-  <div class="ms-auto d-flex align-items-center text-white gap-3">
-    <div class="text-end">
-      <small>Hello, <span id="userName">Guest</span></small><br/>
+    <div class="site-header__account">
+      <span id="userGreeting" class="site-header__user" hidden>
+        <svg class="icon" aria-hidden="true"><use href="#i-user"/></svg>
+        <span>Signed in as</span> <strong id="userName"></strong>
+      </span>
+      <button id="signOutButton" type="button" class="btn btn--ghost btn--sm" hidden>Sign out</button>
+      <a id="signInLink" class="btn btn--primary btn--sm" href="/signin">Sign in</a>
     </div>
-    <button class="btn btn-outline-light btn-sm" onclick="logout()">Logout</button>
   </div>
-</nav>
+</header>

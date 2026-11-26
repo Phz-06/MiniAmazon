@@ -1,9 +1,23 @@
-﻿<div th:fragment="content">
-  <div class="container mt-4">
-    <h2>Your Orders</h2>
-
-    <div id="ordersList" class="mt-4">
-      <!-- Orders will load here -->
+﻿<div th:fragment="content" class="container page">
+  <div class="page-head">
+    <div>
+      <h1>Your orders</h1>
+      <p>Each order is packed at the warehouse, loaded onto a truck and driven to your drop-off point.</p>
     </div>
+    <div style="display: flex; align-items: center; gap: var(--space-3)">
+      <span id="liveStatus" class="live" aria-live="off">
+        <span class="live__dot" aria-hidden="true"></span>
+        <span id="liveText"></span>
+      </span>
+      <button id="refreshOrders" type="button" class="btn btn--secondary btn--sm">
+        <svg class="icon" aria-hidden="true"><use href="#i-refresh"/></svg>
+        Refresh
+      </button>
+    </div>
+  </div>
+
+  <div id="ordersList" class="stack" aria-busy="true">
+    <div class="skeleton" style="height: 13rem"></div>
+    <div class="skeleton" style="height: 13rem"></div>
   </div>
 </div>
