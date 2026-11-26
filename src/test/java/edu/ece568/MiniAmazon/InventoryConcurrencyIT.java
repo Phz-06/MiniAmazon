@@ -133,7 +133,8 @@ class InventoryConcurrencyIT {
 
             assertThat(result.succeeded()).isEqualTo(1);
             Status status = orderService.getOrder(order.getId()).getStatus();
-            assertThat(status).isIn(Status.CANCELED, Status.PAID);
+            // A paid order goes straight to the warehouse in the same transaction.
+            assertThat(status).isIn(Status.CANCELED, Status.PACKING);
             assertThat(fixtures.stockOf(product)).isEqualTo(status == Status.CANCELED ? 10 : 6);
         }
     }

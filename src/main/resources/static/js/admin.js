@@ -3,9 +3,6 @@
     document.getElementById("disconnectStatus").innerText = "";
     document.getElementById("speedStatus").innerText = "";
     document.getElementById("buyStatus").innerText = "";
-    document.getElementById("packStatus").innerText = "";
-    document.getElementById("loadStatus").innerText = "";
-    document.getElementById("queryStatus").innerText = "";
     document.getElementById("worldIdStatus").innerText = "";
 }
 
@@ -122,75 +119,6 @@ async function buyProduct() {
     } catch (err) {
         console.error(err);
         alert("Error buying product.");
-    }
-}
-
-async function packOrder() {
-    clearStatusMsgs();
-
-    const warehouseId = document.getElementById("packWarehouseId").value;
-    const shipmentId = document.getElementById("packShipmentId").value;
-    const productsJson = document.getElementById("packProducts").value;
-
-    let products;
-    try {
-        products = JSON.parse(productsJson);
-    } catch (err) {
-        document.getElementById("packStatus").innerText = "Invalid JSON for products.";
-        return;
-    }
-
-    try {
-        const res = await fetch("/api/world/pack?warehouseId=" + warehouseId + "&shipmentId=" + shipmentId, {
-            method: "POST",
-            headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
-            body: JSON.stringify(products)
-        });
-        const data = await res.json();
-        document.getElementById("packStatus").innerText = res.ok ? "Order packed! SeqNum: " + data.seqNum : "Failed to pack.";
-    } catch (err) {
-        console.error(err);
-        alert("Error packing order.");
-    }
-}
-
-async function loadPackage() {
-    clearStatusMsgs();
-
-    const warehouseId = document.getElementById("loadWarehouseId").value;
-    const truckId = document.getElementById("loadTruckId").value;
-    const shipmentId = document.getElementById("loadShipmentId").value;
-
-    const params = new URLSearchParams({ warehouseId, truckId, shipmentId });
-
-    try {
-        const res = await fetch("/api/world/load?" + params.toString(), {
-            method: "POST",
-            headers: getAuthHeaders()
-        });
-        const data = await res.json();
-        document.getElementById("loadStatus").innerText = res.ok ? "Package loaded! SeqNum: " + data.seqNum : "Failed to load.";
-    } catch (err) {
-        console.error(err);
-        alert("Error loading package.");
-    }
-}
-
-async function queryPackage() {
-    clearStatusMsgs();
-
-    const packageId = document.getElementById("queryPackageId").value;
-
-    try {
-        const res = await fetch("/api/world/package/" + packageId, {
-            method: "GET",
-            headers: getAuthHeaders()
-        });
-        const data = await res.json();
-        document.getElementById("queryStatus").innerText = res.ok ? "Query sent! SeqNum: " + data.seqNum : "Failed to query.";
-    } catch (err) {
-        console.error(err);
-        alert("Error querying package.");
     }
 }
 

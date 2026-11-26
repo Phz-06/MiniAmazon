@@ -48,12 +48,47 @@ customer journey over HTTP and what happens under concurrency:
 *   An order short on one line reserves nothing.
 *   A payment submitted 8 times is accepted once; a cancel racing a payment has one winner.
 *   Admin price edits and restocks during purchases never erase a stock movement.
+*   Eight relays polling the outbox at once never receive the same message.
 
 ## Database schema
 
 The schema lives in `src/main/resources/db/migration` and changes only through new Flyway
 migrations. Hibernate runs with `ddl-auto=validate`: it checks the entities against the schema
 and never alters it.
+
+## How an order is fulfilled
+
+```
+CREATED -> CONFIRMED -> PAID -> PACKING -> PACKED -> LOADING -> LOADED -> DELIVERED
+           stock reserved        world packs  carrier sends a truck  world loads
+```
+
+The world simulator may drop any message it receives and resends its own messages until they are
+acknowledged. The carrier can be unreachable. The app can crash at any point. The design goal is
+that an order is still fulfilled exactly once.
+
+*   **Outbox.** Every message to the world or the carrier is a row in `outbox_message`, written in
+    the same transaction as the status change that caused it. A relay resends each row with
+    backoff until it is acknowledged. A resend carries the same sequence number, so the world
+    executes it once.
+*   **Inbox.** Every message from the world is applied together with a row in `world_inbox`
+    (primary key: world id + sequence number), and acknowledged only after that transaction
+    commits. A redelivery hits the primary key and changes nothing.
+*   **Compare-and-set status.** Each step is `UPDATE ... SET status = :next WHERE status = :current`.
+    Only the caller that moved the status writes the next outbox row, so duplicate triggers from
+    any source are harmless.
+*   **No state in memory.** The world id, pending commands and seen messages are all in Postgres.
+    After a crash the app rejoins its world and continues from what the tables say.
+*   **Stock mirrors the warehouse.** Stock is bought from the world and counts as sellable only
+    when the world reports it arrived, so the app never sells what the warehouse cannot pack.
+
+`FulfillmentReliabilityIT` runs 40 orders against a fake world that loses 30% of messages in each
+direction, resends everything unacknowledged every 25 ms and has its connection cut every 150 ms,
+plus a carrier that refuses one request in five and answers twice. It asserts each order was
+packed and loaded exactly once and that our stock and the world's stock agree.
+
+Not done yet: there is no carrier service in this repository, so against the real simulator orders
+stop at PACKED with their pickup requests waiting in the outbox.
 
 ## API Specifications for Frontend Development
 
@@ -260,25 +295,16 @@ The admin account is created at first startup from `APP_ADMIN_USERNAME` / `APP_A
 #### Connect to World
 
 *   **Endpoint:** `POST /api/world/connect`
-*   **Description:** Connects to the world simulator.
-*   **Security:** Requires admin role (`hasRole('ADMIN')`)
+*   **Description:** Connects to the world simulator and keeps the connection up from then on
+    (the app reconnects by itself after a dropped socket or a restart).
 *   **Query Parameters:**
-    *   `worldId` (Long, Optional): ID of an existing world
-    *   `host` (String, Optional, Default: "localhost"): Simulator hostname
-    *   `port` (Integer, Optional, Default: 23456): Simulator port
-*   **Response (Success - 200 OK):**
-    ```json
-    {
-      "status": "connected",
-      "worldId": 12345678
-    }
-    ```
-*   **Response (Error - 400 Bad Request):**
-    ```json
-    {
-      "status": "failed"
-    }
-    ```
+    *   none: rejoin the world we belong to, or create one if there is none
+    *   `worldId` (Long): join a specific existing world
+    *   `fresh=true`: create a new world
+*   Moving to a different world puts all stock back on order: quantities drop to zero and return
+    as the new world reports each purchase arrived.
+*   **Response (Success - 200 OK):** `{"status": "connected", "worldId": 1}`
+*   **Response (Error - 400 Bad Request):** `{"status": "failed", "message": "..."}`
 
 #### Disconnect from World
 
@@ -322,90 +348,26 @@ The admin account is created at first startup from `APP_ADMIN_USERNAME` / `APP_A
 #### Buy Product
 
 *   **Endpoint:** `POST /api/world/buy`
-*   **Description:** Purchases products for the warehouse.
-*   **Security:** Requires admin role (`hasRole('ADMIN')`)
-*   **Query Parameters:**
-    *   `warehouseId` (Integer, Required): Warehouse identifier
-    *   `productId` (Long, Required): Product identifier
-    *   `description` (String, Required): Product description
-    *   `count` (Integer, Required): Quantity to purchase
-    *   `price` (Long, Optional): Product price
-*   **Response (Success - 200 OK):**
+*   **Description:** Orders stock from the world. The order is queued (also while disconnected);
+    the stock becomes sellable when the world reports it arrived.
+*   **Query Parameters:** `productId` (Long), `description` (String), `count` (Integer),
+    `warehouseId` (Integer, default 1)
+*   **Response (200 OK):** `{"status": "success", "seqNum": 123}`
+
+#### Connection and backlog status
+
+*   **Endpoint:** `GET /api/world/status`
+*   **Response (200 OK):**
     ```json
-    {
-      "status": "success",
-      "seqNum": 123
-    }
-    ```
-*   **Response (Error - 400 Bad Request):**
-    ```json
-    {
-      "status": "failed"
-    }
-    ```
-    or
-    ```json
-    {
-      "status": "not connected"
-    }
+    {"connected": true, "worldId": 1, "pendingCommands": 0, "failedCommands": 0, "pendingCarrierMessages": 0}
     ```
 
-#### Pack Order
+#### Refused messages
 
-*   **Endpoint:** `POST /api/world/pack`
-*   **Description:** Packs an order with multiple products.
-*   **Security:** Requires admin role (`hasRole('ADMIN')`)
-*   **Query Parameters:**
-    *   `warehouseId` (Integer, Required): Warehouse identifier
-    *   `shipmentId` (Long, Required): Shipment identifier
-*   **Request Body:** List of product arrays `[id, count, description]`
-    ```json
-    [
-      [101, 2, "Product One"],
-      [102, 1, "Product Two"]
-    ]
-    ```
-*   **Response (Success - 200 OK):**
-    ```json
-    {
-      "status": "success",
-      "seqNum": 124
-    }
-    ```
-*   **Response (Error - 400 Bad Request):** Same error formats as above
+*   `GET /api/admin/outbox/failed` lists messages the world or the carrier refused, with the reason.
+*   `POST /api/admin/outbox/{id}/retry` sends one again.
 
-#### Load Package
-
-*   **Endpoint:** `POST /api/world/load`
-*   **Description:** Loads a package onto a truck.
-*   **Security:** Requires admin role (`hasRole('ADMIN')`)
-*   **Query Parameters:**
-    *   `warehouseId` (Integer, Required): Warehouse identifier
-    *   `truckId` (Integer, Required): Truck identifier
-    *   `shipmentId` (Long, Required): Shipment identifier
-*   **Response (Success - 200 OK):**
-    ```json
-    {
-      "status": "success",
-      "seqNum": 125
-    }
-    ```
-*   **Response (Error - 400 Bad Request):** Same error formats as above
-
-#### Query Package
-
-*   **Endpoint:** `GET /api/world/package/{packageId}`
-*   **Description:** Gets status of a specific package.
-*   **Security:** Requires admin role (`hasRole('ADMIN')`)
-*   **Path Variable:** `packageId` (Long)
-*   **Response (Success - 200 OK):**
-    ```json
-    {
-      "status": "success",
-      "seqNum": 126
-    }
-    ```
-*   **Response (Error - 400 Bad Request):** Same error formats as above
+Packing and loading have no endpoints: they are driven by orders (see "How an order is fulfilled").
 
 #### Get World ID
 
@@ -425,13 +387,6 @@ The admin account is created at first startup from `APP_ADMIN_USERNAME` / `APP_A
       "status": "not connected"
     }
     ```
-
-## Database Schema (Key Entities)
-
-*   **User:** Stores user information (id, username, password (hashed), email, name, role, enabled status). Has a one-to-many relationship with Orders.
-*   **Order:** Stores order details (id, orderTime, status, totalAmount, deliveryX, deliveryY). Has a many-to-one relationship with User (contains `user_id` foreign key).
-*   **OrderItem:** Stores items within an order (id, quantity, price, product reference).
-*   **Product:** Stores product information (id, name, description, price).
 
 ## Configuration
 

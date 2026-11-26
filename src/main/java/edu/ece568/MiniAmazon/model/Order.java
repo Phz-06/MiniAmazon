@@ -24,16 +24,16 @@ public class Order extends AbstractPersistable<Long> {
     @OneToMany(fetch = FetchType.EAGER, mappedBy = "order", cascade = CascadeType.ALL)
     private List<OrderItem> orderItems;
 
-    @OneToOne(mappedBy = "order", cascade = CascadeType.ALL)
-    private AmazonPackage amazonPackage;
-
-    @Column(unique = true, name = "shipment_id")
-    private String shipmentId;
-
-    @Column(name = "truck_id")
+    @Column(name = "truck_id", updatable = false)
     private Integer truckId;
 
+    /**
+     * Not updatable through the entity, for the same reason as Product.quantity:
+     * the status only moves through OrderRepository.transition, a
+     * compare-and-set. Saving an order can never overwrite a newer status.
+     */
     @Enumerated(EnumType.STRING)
+    @Column(nullable = false, updatable = false)
     private Status status;  // e.g., CREATED, PACKING, PACKED, LOADING, LOADED, DELIVERING, DELIVERED
 
     private String upsAccountName;  // optional

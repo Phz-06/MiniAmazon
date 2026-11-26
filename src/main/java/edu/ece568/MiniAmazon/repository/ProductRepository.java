@@ -35,6 +35,13 @@ public interface ProductRepository extends CrudRepository<Product, Long> {
     @Query("UPDATE Product p SET p.quantity = :quantity WHERE p.productId = :productId")
     int setProductQuantity(@Param("productId") String productId, @Param("quantity") int quantity);
     
+    /** Sets the stock to zero and returns what was there, as one statement. */
+    @Query(value = """
+            WITH before AS (SELECT quantity FROM product WHERE product_id = :productId FOR UPDATE)
+            UPDATE product SET quantity = 0 WHERE product_id = :productId
+            RETURNING (SELECT quantity FROM before)""", nativeQuery = true)
+    int takeAllStock(@Param("productId") String productId);
+
     // Find products by category
     List<Product> findByCategory(String category);
     

@@ -33,7 +33,7 @@ class SecurityIT {
 
     @Test
     void worldAndUpsControls_areAdminOnly() throws Exception {
-        for (String path : new String[]{"/api/world/id", "/api/admin/ups/status"}) {
+        for (String path : new String[]{"/api/world/id", "/api/world/status", "/api/admin/ups/status", "/api/admin/outbox/failed"}) {
             int anonymous = mvc.perform(get(path)).andReturn().getResponse().getStatus();
             assertThat(anonymous).as("anonymous %s", path).isIn(401, 403);
 

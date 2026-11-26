@@ -1,14 +1,11 @@
 package edu.ece568.MiniAmazon.controller;
 
-import edu.ece568.MiniAmazon.Event.CancelOrderEvent;
-import edu.ece568.MiniAmazon.Event.ConfirmOrderEvent;
-import edu.ece568.MiniAmazon.Event.ProcessPaymentEvent;
 import edu.ece568.MiniAmazon.dto.request.ConfirmOrderRequest;
 import edu.ece568.MiniAmazon.dto.request.OrderRequest;
 import edu.ece568.MiniAmazon.dto.request.PaymentRequest;
 import edu.ece568.MiniAmazon.dto.response.OrderDTO;
 import edu.ece568.MiniAmazon.model.Order;
-import edu.ece568.MiniAmazon.service.EventPublisher;
+import edu.ece568.MiniAmazon.service.PaymentService;
 import edu.ece568.MiniAmazon.service.OrderService;
 import edu.ece568.MiniAmazon.service.UserService;
 import jakarta.validation.Valid;
@@ -26,12 +23,12 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/orders")
 public class OrderController {
-    private final EventPublisher eventPublisher;
+    private final PaymentService paymentService;
     private final OrderService orderService;
     private final UserService userService;
 
-    public OrderController(EventPublisher eventPublisher, OrderService orderService, UserService userService) {
-        this.eventPublisher = eventPublisher;
+    public OrderController(PaymentService paymentService, OrderService orderService, UserService userService) {
+        this.paymentService = paymentService;
         this.orderService = orderService;
         this.userService = userService;
     }
@@ -62,7 +59,7 @@ public class OrderController {
         log.info("Received order confirmation request for order ID: {} to {},{}",
                 orderId, request.getX(), request.getY());
 
-        eventPublisher.publish(new ConfirmOrderEvent(orderId, request.getX(), request.getY()));
+        orderService.confirmOrder(orderId, request.getX(), request.getY());
 
         Map<String, String> response = Map.of(
                 "orderId", String.valueOf(orderId),
@@ -76,7 +73,7 @@ public class OrderController {
     @PostMapping("/{orderId}/cancel")
     public ResponseEntity<Map<String, String>> cancelOrder(@PathVariable Long orderId) {
         log.info("Received order cancellation request for order ID: {}", orderId);
-        eventPublisher.publish(new CancelOrderEvent(orderId));
+        orderService.cancelOrder(orderId);
 
         Map<String, String> response = Map.of(
                 "orderId", String.valueOf(orderId),
@@ -93,7 +90,7 @@ public class OrderController {
             @Valid @RequestBody PaymentRequest request) {
         log.info("Received payment request for order ID: {}", orderId);
 
-        eventPublisher.publish(new ProcessPaymentEvent(orderId, request.getAmount(), request.getCreditCardNumber()));
+        paymentService.processPayment(orderId, request.getAmount());
         Map<String, String> response = Map.of(
                 "orderId", String.valueOf(orderId),
                 "status", "payment_processing"

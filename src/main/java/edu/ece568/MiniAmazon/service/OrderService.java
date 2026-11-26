@@ -112,21 +112,4 @@ public class OrderService {
         return orderRepository.findById(orderId)
                 .orElseThrow(() -> new IllegalArgumentException("Order with ID " + orderId + " not found"));
     }
-
-    @Transactional
-    public void setStatus(String shipmentId, Status status) {
-        Order order = getOrderByShipmentId(shipmentId);
-        order.setStatus(status);
-        orderRepository.save(order);
-    }
-
-    @Transactional
-    public void saveOrder(Order order) {
-        orderRepository.save(order);
-    }
-
-    @Transactional(readOnly = true)
-    public Order getOrderByShipmentId(String shipmentId) {
-        return orderRepository.findOrderByShipmentId(shipmentId).orElseThrow(() -> new IllegalArgumentException("Order with shipment ID " + shipmentId + " not found"));
-    }
 }

@@ -49,6 +49,10 @@ services:
       POSTGRES_DB: worldSim
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: abc123
+    volumes:
+      # Kept together with pgdata: the app rejoins its world after a restart,
+      # so the world has to still exist. "down --volumes" wipes both.
+      - worlddata:/var/lib/postgresql/data
     networks:
       default:
         aliases: [mydb]
@@ -67,3 +71,4 @@ services:
 
 volumes:
   pgdata:
+  worlddata:

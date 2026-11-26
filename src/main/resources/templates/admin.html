@@ -69,56 +69,6 @@
       </div>
     </div>
 
-    <!-- Pack Order -->
-    <div class="card mb-4">
-      <div class="card-body">
-        <h5 class="card-title">Pack Order</h5>
-        <div class="row g-2 mb-2">
-          <div class="col-md-4">
-            <input type="number" id="packWarehouseId" class="form-control" placeholder="Warehouse ID">
-          </div>
-          <div class="col-md-4">
-            <input type="number" id="packShipmentId" class="form-control" placeholder="Shipment ID">
-          </div>
-        </div>
-        <textarea id="packProducts" class="form-control" rows="3" placeholder='Products JSON (example: [[1, 2, "desc"], [2, 3, "desc2"]])'></textarea>
-        <button class="btn btn-primary mt-2" onclick="packOrder()">Pack</button>
-        <div id="packStatus" class="mt-2 text-muted small"></div>
-      </div>
-    </div>
-
-    <!-- Load Package -->
-    <div class="card mb-4">
-      <div class="card-body">
-        <h5 class="card-title">Load Package</h5>
-        <div class="row g-2">
-          <div class="col-md-3">
-            <input type="number" id="loadWarehouseId" class="form-control" placeholder="Warehouse ID">
-          </div>
-          <div class="col-md-3">
-            <input type="number" id="loadTruckId" class="form-control" placeholder="Truck ID">
-          </div>
-          <div class="col-md-3">
-            <input type="number" id="loadShipmentId" class="form-control" placeholder="Shipment ID">
-          </div>
-        </div>
-        <button class="btn btn-primary mt-2" onclick="loadPackage()">Load</button>
-        <div id="loadStatus" class="mt-2 text-muted small"></div>
-      </div>
-    </div>
-
-    <!-- Query Package -->
-    <div class="card mb-4">
-      <div class="card-body">
-        <h5 class="card-title">Query Package</h5>
-        <div class="input-group">
-          <input type="number" id="queryPackageId" class="form-control" placeholder="Package ID">
-          <button class="btn btn-primary" onclick="queryPackage()">Query</button>
-        </div>
-        <div id="queryStatus" class="mt-2 text-muted small"></div>
-      </div>
-    </div>
-
     <!-- Get World ID -->
     <div class="card mb-4">
       <div class="card-body">

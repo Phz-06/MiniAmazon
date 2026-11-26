@@ -1,189 +1,59 @@
 package edu.ece568.MiniAmazon.service;
 
-import edu.ece568.MiniAmazon.Event.LoadPackageEvent;
-import edu.ece568.MiniAmazon.Event.PackageStatusUpdateEvent;
-import edu.ece568.MiniAmazon.model.Order;
-import edu.ece568.MiniAmazon.model.Status;
-import edu.ece568.MiniAmazon.proto.Amazon_UPS.GenericMessage;
-import edu.ece568.MiniAmazon.proto.Amazon_UPS.TruckAssignment;
+import edu.ece568.MiniAmazon.fulfillment.FulfillmentService;
 import edu.ece568.MiniAmazon.proto.Amazon_UPS.DeliveryUpdate;
-import edu.ece568.MiniAmazon.proto.Amazon_UPS.DeliveryCompleted;
-import edu.ece568.MiniAmazon.proto.Amazon_UPS.Error;
+import edu.ece568.MiniAmazon.proto.Amazon_UPS.GenericMessage;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
-import static edu.ece568.MiniAmazon.model.Status.DELIVERED;
-
 /**
- * Service to process responses from UPS
+ * Turns messages from UPS into fulfilment steps. Every step is idempotent
+ * (see FulfillmentService), so a message UPS sends twice changes nothing the
+ * second time.
  */
 @Service
 @Slf4j
 public class UPSResponseProcessor {
 
     private final UPSService upsService;
-    private final EventPublisher eventPublisher;
-    private final WorldService worldService;
-    private final OrderService orderService;
+    private final FulfillmentService fulfillment;
 
-    @Autowired
-    public UPSResponseProcessor(UPSService upsService, EventPublisher eventPublisher, WorldService worldService, OrderService orderService) {
+    public UPSResponseProcessor(UPSService upsService, FulfillmentService fulfillment) {
         this.upsService = upsService;
-        this.eventPublisher = eventPublisher;
-        this.worldService = worldService;
-        this.orderService = orderService;
+        this.fulfillment = fulfillment;
     }
 
-    /**
-     * Process responses from UPS.
-     * This method is scheduled to run every 100ms.
-     */
     @Scheduled(fixedDelay = 100)
     public void processResponses() {
-        if (!upsService.isConnected()) {
-            return;
+        GenericMessage message;
+        while ((message = upsService.getNextMessage()) != null) {
+            try {
+                process(message);
+            } catch (RuntimeException e) {
+                log.error("Could not process UPS message of type {}", message.getType(), e);
+            }
         }
+    }
 
-        GenericMessage message = upsService.getNextMessage();
-        if (message == null) {
-            return;
-        }
-
-        // Process message based on type
+    private void process(GenericMessage message) {
         switch (message.getType()) {
-            case "truck_assignment":
-                processTruckAssignment(message.getTruckAssignment());
-                break;
-            case "delivery_update":
-                processDeliveryUpdate(message.getDeliveryUpdate());
-                break;
-            case "delivery_completed":
-                processDeliveryCompleted(message.getDeliveryCompleted());
-                break;
-            case "error":
-                processError(message.getError());
-                break;
-            default:
-                log.warn("Received unknown message type from UPS: {}", message.getType());
-                break;
+            case "truck_assignment" -> fulfillment.onTruckAssigned(
+                    orderId(message.getTruckAssignment().getPackageId()), message.getTruckAssignment().getTruckId());
+            case "delivery_update" -> {
+                if (message.getDeliveryUpdate().getStatus() != DeliveryUpdate.Status.PACKING) {
+                    fulfillment.onOutForDelivery(orderId(message.getDeliveryUpdate().getPackageId()));
+                }
+            }
+            case "delivery_completed" -> fulfillment.onDelivered(orderId(message.getDeliveryCompleted().getPackageId()));
+            case "error" -> log.error("UPS error {} for seqnum {}: {}", message.getError().getErrorCode(),
+                    message.getError().getSeqnum(), message.getError().getMessage());
+            default -> log.warn("Unknown message type from UPS: {}", message.getType());
         }
     }
 
-    /**
-     * Process truck assignment notifications
-     * 
-     * @param truckAssignment The truck assignment message
-     */
-    private void processTruckAssignment(TruckAssignment truckAssignment) {
-        String packageId = truckAssignment.getPackageId();
-        int truckId = truckAssignment.getTruckId();
-        Order order = orderService.getOrderByShipmentId("PKG-" + packageId);
-        if (order != null) {
-            order.setTruckId(truckId);
-            order.setStatus(Status.LOADING);
-            orderService.saveOrder(order);
-        }
-        log.info("Truck assignment received for package: {}, truck: {}", packageId, truckId);
-        
-        try {
-            // Publish event to load the package onto the truck
-            LoadPackageEvent loadPackageEvent = new LoadPackageEvent(packageId, truckId);
-            eventPublisher.publish(loadPackageEvent);
-            
-            log.info("Published load package event for package: {}, truck: {}", packageId, truckId);
-        } catch (Exception e) {
-            log.error("Error processing truck assignment for package: {}", packageId, e);
-        }
+    /** The package id we hand to UPS is the order id. */
+    private static long orderId(String packageId) {
+        return Long.parseLong(packageId.trim());
     }
-
-    /**
-     * Process delivery update notifications
-     * 
-     * @param deliveryUpdate The delivery update message
-     */
-    private void processDeliveryUpdate(DeliveryUpdate deliveryUpdate) {
-//        String packageId = deliveryUpdate.getPackageId();
-//        DeliveryUpdate.Status status = deliveryUpdate.getStatus();
-//
-//        log.info("Delivery update received for package: {}, status: {}", packageId, status);
-//
-//        try {
-//            // Publish event to update package status
-////            String statusStr = "";
-////            switch (status) {
-////                case PACKING:
-////                    //statusStr = "PACKING";
-////                    break;
-////                case OUT_FOR_DELIVERY:
-////                    //statusStr = "OUT_FOR_DELIVERY";
-////                    break;
-////                case DELIVERED:
-////                    statusStr = "DELIVERING";
-////                    break;
-////            }
-//
-//            //PackageStatusUpdateEvent statusEvent = new PackageStatusUpdateEvent(packageId, statusStr);
-//            //e/ventPublisher.publish(statusEvent);
-//
-//            log.info("Published package status update event for package: {}, status: {}", packageId, statusStr);
-//        } catch (Exception e) {
-//            log.error("Error processing delivery update for package: {}", packageId, e);
-//        }
-    }
-
-    /**
-     * Process delivery completed notifications
-     * 
-     * @param deliveryCompleted The delivery completed message
-     */
-    private void processDeliveryCompleted(DeliveryCompleted deliveryCompleted) {
-        String packageId = deliveryCompleted.getPackageId();
-        
-        log.info("Delivery completed for package: {}", packageId);
-        
-        try {
-            // Publish event to update package status to DELIVERED
-            PackageStatusUpdateEvent statusEvent = new PackageStatusUpdateEvent(packageId, "DELIVERED");
-            eventPublisher.publish(statusEvent);
-            
-            log.info("Published package delivery completed event for package: {}", packageId);
-        } catch (Exception e) {
-            log.error("Error processing delivery completed for package: {}", packageId, e);
-        }
-    }
-
-    /**
-     * Process error messages from UPS
-     * 
-     * @param error The error message
-     */
-    private void processError(Error error) {
-        long seqNum = error.getSeqnum();
-        Error.ErrorType errorCode = error.getErrorCode();
-        String errorMessage = error.getMessage();
-        
-        log.error("Error received from UPS - seqNum: {}, errorCode: {}, message: {}", 
-                seqNum, errorCode, errorMessage);
-        
-        // Handle specific error types if needed
-        switch (errorCode) {
-            case TIMEOUT:
-                log.error("UPS reported a timeout for seqNum: {}", seqNum);
-                break;
-            case DUPLICATE_SEQNUM:
-                log.error("UPS reported a duplicate sequence number: {}", seqNum);
-                break;
-            case INVALID_TRUCK:
-                log.error("UPS reported an invalid truck ID for seqNum: {}", seqNum);
-                break;
-            case MISSING_PACKAGE:
-                log.error("UPS reported a missing package for seqNum: {}", seqNum);
-                break;
-            default:
-                log.error("Unknown error code from UPS: {}", errorCode);
-                break;
-        }
-    }
-} 
+}

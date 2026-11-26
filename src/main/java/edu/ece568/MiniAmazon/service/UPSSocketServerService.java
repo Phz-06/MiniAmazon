@@ -1,7 +1,5 @@
 package edu.ece568.MiniAmazon.service;
 
-import com.google.protobuf.CodedInputStream;
-import com.google.protobuf.CodedOutputStream;
 import edu.ece568.MiniAmazon.proto.Amazon_UPS.GenericMessage;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -188,20 +186,10 @@ public class UPSSocketServerService {
             throw new IOException("No UPS client connected");
         }
         
-        // Get size of message
-        int size = message.getSerializedSize();
-        
-        // Create coded output stream
-        CodedOutputStream codedOutputStream = CodedOutputStream.newInstance(outputStream);
-        
-        // Write size as varint32
-        codedOutputStream.writeUInt32NoTag(size);
-        
-        // Write message
-        message.writeTo(codedOutputStream);
-        
-        // Flush data
-        codedOutputStream.flush();
+        synchronized (outputStream) {
+            message.writeDelimitedTo(outputStream);
+            outputStream.flush();
+        }
         
         log.debug("Sent message to UPS client: {}", message.getType());
     }
@@ -214,17 +202,11 @@ public class UPSSocketServerService {
             throw new IOException("No UPS client connected");
         }
         
-        // Create coded input stream
-        CodedInputStream codedInputStream = CodedInputStream.newInstance(inputStream);
-        
-        // Read size
-        int size = codedInputStream.readUInt32();
-        
-        // Read message
-        byte[] messageBytes = codedInputStream.readRawBytes(size);
-        
-        // Parse message
-        return GenericMessage.parseFrom(messageBytes);
+        GenericMessage message = GenericMessage.parseDelimitedFrom(inputStream);
+        if (message == null) {
+            throw new java.io.EOFException("UPS closed the connection");
+        }
+        return message;
     }
     
     /**
