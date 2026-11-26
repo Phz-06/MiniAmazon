@@ -1,1 +1,6 @@
 rootProject.name = 'MiniAmazon'
+
+include 'shared'           // message contracts, outbox, idempotent consumer, reliable world link
+include 'order-service'    // customers, catalog, orders, payments: the public API
+include 'world-gateway'    // the single connection to the warehouse side of the world
+include 'carrier-service'  // the shipping company: trucks, pickups, deliveries

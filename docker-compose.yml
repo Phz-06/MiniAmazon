@@ -1,9 +1,74 @@
-# One command brings up everything the app needs:
+# One command brings up everything:
 #   cp .env.example .env   (fill it in once)
 #   docker compose up --build
 name: miniamazon
 
+# Memory. A JVM with no instructions sizes its heap from the machine it sees,
+# which here is the whole Docker VM: each of the four JVMs (three services and
+# Kafka) would allow itself a quarter of it and, having no reason to collect
+# garbage sooner, drift towards that. So every heap gets an explicit ceiling,
+# and every container a hard limit somewhat above it as a backstop.
+# The values suit a laptop; raise SERVICE_JAVA_OPTS for load tests.
+x-service-env: &service-env
+  JAVA_TOOL_OPTIONS: ${SERVICE_JAVA_OPTS:--Xmx192m -XX:+UseSerialGC -Xss512k}
+  SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-amazon}
+  SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
+  KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+
+x-service-deps: &service-deps
+  postgres:
+    condition: service_healthy
+  kafka:
+    condition: service_healthy
+
 services:
+  # --- Our services ------------------------------------------------------
+  order-service:
+    build:
+      context: .
+      args: {SERVICE: order-service}
+    depends_on: *service-deps
+    mem_limit: 768m
+    ports:
+      - "127.0.0.1:${APP_PORT:-8090}:8000"
+    environment:
+      <<: *service-env
+      # The only service with JPA, a web server and templates: it gets a larger heap.
+      JAVA_TOOL_OPTIONS: ${ORDER_SERVICE_JAVA_OPTS:--Xmx320m -XX:+UseSerialGC -Xss512k}
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB:-amazon}
+      APP_JWT_SECRET: ${APP_JWT_SECRET:?set APP_JWT_SECRET in .env}
+      APP_ADMIN_USERNAME: ${APP_ADMIN_USERNAME:-admin}
+      APP_ADMIN_PASSWORD: ${APP_ADMIN_PASSWORD:-}
+      APP_ADMIN_EMAIL: ${APP_ADMIN_EMAIL:-admin@example.com}
+
+  # Exactly one instance: the world allows one warehouse connection per world.
+  world-gateway:
+    build:
+      context: .
+      args: {SERVICE: world-gateway}
+    depends_on: *service-deps
+    mem_limit: 512m
+    environment:
+      <<: *service-env
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/gateway
+      WORLD_HOST: world
+      WORLD_PORT: 23456
+      WORLD_SIM_SPEED: ${WORLD_SIM_SPEED:-0}
+
+  carrier-service:
+    build:
+      context: .
+      args: {SERVICE: carrier-service}
+    depends_on: *service-deps
+    mem_limit: 512m
+    environment:
+      <<: *service-env
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/carrier
+      WORLD_HOST: world
+      WORLD_UPS_PORT: 12345
+      CARRIER_TRUCKS: ${CARRIER_TRUCKS:-10}
+
+  # --- Infrastructure ----------------------------------------------------
   postgres:
     image: postgres:17-alpine
     environment:
@@ -12,8 +77,9 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}
     volumes:
       - pgdata:/var/lib/postgresql/data
+      - ./docker/postgres-init.sql:/docker-entrypoint-initdb.d/10-databases.sql:ro
     ports:
-      # Loopback only, for running the app from the IDE against this database.
+      # Loopback only, for running a service from the IDE against this database.
       - "127.0.0.1:${POSTGRES_PORT:-5432}:5432"
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
@@ -21,25 +87,37 @@ services:
       timeout: 3s
       retries: 30
 
-  app:
-    build: .
-    depends_on:
-      postgres:
-        condition: service_healthy
-    ports:
-      - "127.0.0.1:${APP_PORT:-8090}:8000"
+  # Single-node Kafka in KRaft mode (no ZooKeeper).
+  kafka:
+    image: apache/kafka:3.9.1
+    mem_limit: 1g
     environment:
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB:-amazon}
-      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-amazon}
-      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
-      APP_JWT_SECRET: ${APP_JWT_SECRET:?set APP_JWT_SECRET in .env}
-      APP_ADMIN_USERNAME: ${APP_ADMIN_USERNAME:-admin}
-      APP_ADMIN_PASSWORD: ${APP_ADMIN_PASSWORD:-}
-      APP_ADMIN_EMAIL: ${APP_ADMIN_EMAIL:-admin@example.com}
-      WORLD_HOST: world
-      WORLD_PORT: 23456
+      # The image defaults to a fixed 1 GB heap, claimed at startup. A single
+      # broker with four small topics needs a fraction of that.
+      KAFKA_HEAP_OPTS: -Xms256m -Xmx512m
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_LISTENERS: PLAINTEXT://:9092,CONTROLLER://:9093
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:9093
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      # Topics are declared by the services (SharedMessagingConfig), not created by accident.
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "false"
+      KAFKA_LOG_DIRS: /var/lib/kafka/data
+    volumes:
+      - kafkadata:/var/lib/kafka/data
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/kafka/bin/kafka-broker-api-versions.sh --bootstrap-server localhost:9092 > /dev/null 2>&1"]
+      interval: 3s
+      timeout: 10s
+      retries: 30
 
-  # --- World simulator --------------------------------------------------
+  # --- World simulator ---------------------------------------------------
   # A closed-source x86-64 binary from the course. It is built straight from
   # its own repository rather than copied into this one, and runs emulated on
   # Apple Silicon. Its database host name and credentials are compiled in.
@@ -49,10 +127,9 @@ services:
       POSTGRES_DB: worldSim
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: abc123
-    volumes:
-      # Kept together with pgdata: the app rejoins its world after a restart,
-      # so the world has to still exist. "down --volumes" wipes both.
-      - worlddata:/var/lib/postgresql/data
+    # No volume on purpose: the simulator drops all its tables when it starts,
+    # so its data never survives a restart anyway. When it comes back empty the
+    # gateway notices, creates a new world, and the other services follow.
     networks:
       default:
         aliases: [mydb]
@@ -63,12 +140,9 @@ services:
     platform: linux/amd64
     depends_on:
       - world-db
-    # Arguments: UPS port, Amazon port, flakiness (0-99: chance a message is dropped).
+    # Arguments: carrier port, warehouse port, flakiness (0-99: chance a message is dropped).
     command: bash -c "./wait-for-it.sh mydb:5432 --strict -- ./server 12345 23456 ${WORLD_FLAKINESS:-0}"
-    ports:
-      - "127.0.0.1:12345:12345"
-      - "127.0.0.1:23456:23456"
 
 volumes:
   pgdata:
-  worlddata:
+  kafkadata:

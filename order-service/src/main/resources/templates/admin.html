@@ -1,0 +1,42 @@
+<div th:fragment="content">
+  <div class="container mt-4">
+    <h2 class="mb-4">Warehouse</h2>
+
+    <!-- Status -->
+    <div class="card mb-4">
+      <div class="card-body">
+        <h5 class="card-title">Status</h5>
+        <p class="text-muted small mb-2">
+          The connection to the world belongs to the world-gateway service, which joins or creates
+          its world on its own. This shows which world the stock figures describe.
+        </p>
+        <button class="btn btn-info" onclick="loadStatus()">Refresh</button>
+        <div id="worldStatus" class="mt-2 text-muted small"></div>
+      </div>
+    </div>
+
+    <!-- Buy Product -->
+    <div class="card mb-4">
+      <div class="card-body">
+        <h5 class="card-title">Order Stock</h5>
+        <p class="text-muted small mb-2">Stock becomes sellable when the warehouse reports it arrived.</p>
+        <div class="row g-2">
+          <div class="col-md-3">
+            <input type="number" id="buyWarehouseId" class="form-control" placeholder="Warehouse ID" value="1">
+          </div>
+          <div class="col-md-3">
+            <input type="number" id="buyProductId" class="form-control" placeholder="Product ID">
+          </div>
+          <div class="col-md-4">
+            <input type="text" id="buyDescription" class="form-control" placeholder="Description">
+          </div>
+          <div class="col-md-2">
+            <input type="number" id="buyCount" class="form-control" placeholder="Count">
+          </div>
+        </div>
+        <button class="btn btn-primary mt-2" onclick="buyProduct()">Buy</button>
+        <div id="buyStatus" class="mt-2 text-muted small"></div>
+      </div>
+    </div>
+  </div>
+</div>

@@ -15,11 +15,12 @@ jobs:
           distribution: temurin
           java-version: 21
       - uses: gradle/actions/setup-gradle@v4
-      # Compiles, then runs the integration tests against a real Postgres
-      # started by Testcontainers (Docker is preinstalled on the runner).
+      # Compiles every module, then runs the integration tests of all three
+      # services against a real Postgres and Kafka started by Testcontainers
+      # (Docker is preinstalled on the runner).
       - run: ./gradlew build
       - if: failure()
         uses: actions/upload-artifact@v4
         with:
           name: test-report
-          path: build/reports/tests/test
+          path: "**/build/reports/tests/test"

@@ -1,0 +1,129 @@
+// What the services say to each other over Kafka.
+//
+// Four topics, named for who is being addressed or who is reporting:
+//
+//   warehouse.commands   order-service  -> world-gateway
+//   warehouse.events     world-gateway  -> order-service, carrier-service
+//   carrier.commands     order-service  -> carrier-service
+//   carrier.events       carrier-service -> order-service
+//
+// Every record is an Envelope. Delivery is at-least-once, so every consumer
+// records Envelope.id and ignores an id it has already applied. Records about
+// one order share a key (the order id) and therefore a partition.
+//
+// Fields are only ever added, never renumbered or reused.
+syntax = "proto3";
+
+package edu.ece568.MiniAmazon.proto.events;
+
+option java_package = "edu.ece568.MiniAmazon.proto";
+option java_outer_classname = "Events";
+
+message Item {
+  int64 product_id = 1;
+  string description = 2;
+  int32 count = 3;
+}
+
+// ---- warehouse.commands -------------------------------------------------
+message PurchaseStock {
+  int32 warehouse_id = 1;
+  repeated Item items = 2;
+}
+
+message PackOrder {
+  int64 order_id = 1;
+  int32 warehouse_id = 2;
+  repeated Item items = 3;
+}
+
+message LoadPackage {
+  int64 order_id = 1;
+  int32 warehouse_id = 2;
+  int32 truck_id = 3;
+}
+
+// ---- warehouse.events ---------------------------------------------------
+// The gateway now lives in this world. A different id than before means an
+// empty warehouse: stock has to be bought again and trucks registered again.
+message WorldAdopted {
+  int64 world_id = 1;
+  // Counts the worlds the gateway has lived in. The id alone does not identify
+  // a world: the simulator starts numbering from 1 again after every restart.
+  // Consumers act when the generation is higher than the one they know.
+  int64 generation = 2;
+}
+
+message StockArrived {
+  int32 warehouse_id = 1;
+  repeated Item items = 2;
+}
+
+message OrderPacked {
+  int64 order_id = 1;
+}
+
+message PackageLoaded {
+  int64 order_id = 1;
+}
+
+// The world understood a command and refused it.
+message CommandRejected {
+  string command = 1;
+  int64 order_id = 2;
+  string reason = 3;
+}
+
+// ---- carrier.commands ---------------------------------------------------
+message RequestPickup {
+  int64 order_id = 1;
+  int32 warehouse_id = 2;
+  int32 dest_x = 3;
+  int32 dest_y = 4;
+  string account = 5;
+}
+
+message ConfirmLoaded {
+  int64 order_id = 1;
+  int32 truck_id = 2;
+}
+
+// ---- carrier.events -----------------------------------------------------
+// The truck is standing at the warehouse; the package can be loaded onto it.
+message TruckArrived {
+  int64 order_id = 1;
+  int32 truck_id = 2;
+}
+
+message OutForDelivery {
+  int64 order_id = 1;
+}
+
+message Delivered {
+  int64 order_id = 1;
+}
+
+message Envelope {
+  // "<producing service>-<its outbox row id>": stable across resends.
+  string id = 1;
+  int64 occurred_at_ms = 2;
+
+  oneof body {
+    PurchaseStock purchase_stock = 10;
+    PackOrder pack_order = 11;
+    LoadPackage load_package = 12;
+
+    WorldAdopted world_adopted = 20;
+    StockArrived stock_arrived = 21;
+    OrderPacked order_packed = 22;
+    PackageLoaded package_loaded = 23;
+    CommandRejected command_rejected = 24;
+
+    RequestPickup request_pickup = 30;
+    ConfirmLoaded confirm_loaded = 31;
+
+    TruckArrived truck_arrived = 40;
+    OutForDelivery out_for_delivery = 41;
+    Delivered delivered = 42;
+  }
+}

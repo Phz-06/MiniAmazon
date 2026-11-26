@@ -1,0 +1,27 @@
+plugins {
+	id 'java-library'
+	id 'java-test-fixtures'
+	id 'com.google.protobuf'
+}
+
+dependencies {
+	api 'com.google.protobuf:protobuf-java:3.25.5'
+	api 'org.springframework.kafka:spring-kafka'
+	api 'org.springframework:spring-jdbc'
+	api 'org.springframework:spring-tx'
+	api 'org.springframework:spring-context'
+	implementation 'org.slf4j:slf4j-api'
+
+	testFixturesApi 'com.google.protobuf:protobuf-java:3.25.5'
+	testFixturesApi 'org.springframework.kafka:spring-kafka'
+	testFixturesApi 'org.springframework.boot:spring-boot-test'
+	testFixturesApi 'org.springframework.boot:spring-boot-testcontainers'
+	testFixturesApi 'org.testcontainers:postgresql'
+	testFixturesApi 'org.testcontainers:kafka'
+}
+
+protobuf {
+	protoc {
+		artifact = 'com.google.protobuf:protoc:3.25.5'
+	}
+}
