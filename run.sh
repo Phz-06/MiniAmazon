@@ -1,3 +1,3 @@
 #!/bin/bash
-
-sudo docker-compose up -d
+# Start everything in the background. Needs a .env (see .env.example).
+docker compose up -d

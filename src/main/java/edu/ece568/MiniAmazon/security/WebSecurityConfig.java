@@ -60,7 +60,7 @@ public class WebSecurityConfig {
                                 "/admin"
                         ).permitAll()
                         .requestMatchers("/api/auth/**").permitAll()
-                        .requestMatchers("/api/world/**").permitAll()
+                        .requestMatchers("/api/world/**", "/api/admin/**").hasRole("ADMIN")
                         .requestMatchers("/api/products/**").permitAll()
                         .anyRequest().authenticated());
         http.addFilterBefore(jwtAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class);

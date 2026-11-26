@@ -23,9 +23,7 @@ public class OrderSecurityEvaluator {
         String username = authentication.getName();
 
         // Find order by ID
-        return orderRepository.findById(orderId)
-                .map(order -> order.getUser().getUsername().equals(username))
-                .orElse(false);
+        return orderRepository.existsByIdAndUser_Username(orderId, username);
     }
 
     public boolean isOrderOwnerOrAdmin(Long orderId) {

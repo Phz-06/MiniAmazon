@@ -1,5 +1,6 @@
 package edu.ece568.MiniAmazon.dto.response;
 
+import java.math.BigDecimal;
 import edu.ece568.MiniAmazon.model.OrderItem;
 import lombok.Data;
 
@@ -7,7 +8,7 @@ import lombok.Data;
 public class OrderItemDTO {
     private Long id;
     private int quantity;
-    private double price;
+    private BigDecimal price;
     private ProductSummaryDTO product;
     
     public static OrderItemDTO fromEntity(OrderItem orderItem) {

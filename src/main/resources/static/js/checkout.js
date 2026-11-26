@@ -40,7 +40,7 @@ async function loadCartSummary() {
         }
 
         for (const item of data.cartItems) {
-            const itemTotal = item.price * item.quantity;
+            const itemTotal = Number(item.price);
             cartTotalAmount += itemTotal;
 
             const div = document.createElement("div");
@@ -121,7 +121,7 @@ async function checkout() {
             body: JSON.stringify({
                 orderId,
                 creditCardNumber,
-                amount: cartTotalAmount.toFixed(2)
+                amount: checkoutData.totalPrice
             })
         });
 

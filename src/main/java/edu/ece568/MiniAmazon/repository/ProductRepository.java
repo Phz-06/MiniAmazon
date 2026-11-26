@@ -17,6 +17,11 @@ public interface ProductRepository extends CrudRepository<Product, Long> {
     Product findByWareHouse_xCoordinateAndWareHouse_yCoordinate(int x, int y);
     int findQuantityByProductId(String productID);
 
+    /**
+     * Reserve stock. The availability check and the decrement are one statement,
+     * so two buyers cannot both pass a check against the same last unit.
+     * Returns 0 when there is not enough left.
+     */
     @Modifying
     @Query("UPDATE Product p SET p.quantity = p.quantity - :quantity WHERE p.productId = :productId AND p.quantity >= :quantity")
     int decreaseProductQuantity(@Param("productId") String productId, @Param("quantity") int quantity);
@@ -24,6 +29,11 @@ public interface ProductRepository extends CrudRepository<Product, Long> {
     @Modifying
     @Query("UPDATE Product p SET p.quantity = p.quantity + :quantity WHERE p.productId = :productId")
     int increaseProductQuantity(@Param("productId") String productId, @Param("quantity") int quantity);
+
+    /** Absolute stock correction (admin). Still a single statement, never a read-modify-write. */
+    @Modifying
+    @Query("UPDATE Product p SET p.quantity = :quantity WHERE p.productId = :productId")
+    int setProductQuantity(@Param("productId") String productId, @Param("quantity") int quantity);
     
     // Find products by category
     List<Product> findByCategory(String category);

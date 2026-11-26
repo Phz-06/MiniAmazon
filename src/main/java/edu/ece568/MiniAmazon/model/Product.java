@@ -20,6 +20,13 @@ public class Product extends AbstractPersistable<Long> {
     private String productId;
     private BigDecimal price;
     private String description;
+    /**
+     * Stock on hand. Deliberately not updatable through the entity: Hibernate
+     * writes every column on save, so an admin editing the price would write
+     * back a stale quantity and erase concurrent purchases. Stock only moves
+     * through the atomic statements in ProductRepository.
+     */
+    @Column(nullable = false, updatable = false)
     private int quantity;
     private String category;
 

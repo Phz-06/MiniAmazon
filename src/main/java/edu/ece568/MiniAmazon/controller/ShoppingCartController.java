@@ -111,6 +111,7 @@ public class ShoppingCartController {
         
         Map<String, String> orderDetails = Map.of(
                 "orderId", String.valueOf(order.getId()),
+                "totalPrice", order.getTotalPrice().toPlainString(),
                 "status", "success"
         );
         

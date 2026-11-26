@@ -6,37 +6,54 @@ This project is the backend system for a miniature e-commerce platform, mimickin
 
 ## Technologies Used
 
-*   **Java 17+**
-*   **Spring Boot 3.x**
-*   **Spring Security 6.x** (JWT Authentication)
-*   **Spring Data JPA / Hibernate**
-*   **PostgreSQL**
-*   **Gradle**
-*   **Lombok**
-*   **jjwt** (Java JWT library)
+*   **Java 21**, **Spring Boot 3.5**, **Spring Security 6** (JWT)
+*   **Spring Data JPA / Hibernate**, **PostgreSQL 17**, **Flyway** migrations
+*   **Protocol Buffers** over TCP to the world simulator
+*   **Testcontainers** integration tests, **GitHub Actions** CI
+*   **Docker Compose** for the whole stack
 
-## Setup & Running
+## Running it
 
-1.  **Database Setup:**
-    *   Ensure PostgreSQL is installed and running.
-    *   Create a database (e.g., `mydatabase`).
-    *   Create a user (e.g., `amazonuser`) with a password (e.g., `ERSSIG3`).
-    *   Grant necessary privileges to the user on the database.
-    *   Update the database connection details (`spring.datasource.url`, `spring.datasource.username`, `spring.datasource.password`) in `src/main/resources/application.properties` if they differ from the defaults.
+Everything (database, app, world simulator) starts with one command. Only Docker is required.
 
-2.  **JWT Secret:**
-    *   The JWT secret key is configured in `application.properties` under `app.jwt.secret`. Ensure this key is securely generated and meets the requirements of the chosen signing algorithm (HS512 requires >= 512 bits).
+```bash
+cp .env.example .env        # then fill in the three secrets
+docker compose up --build
+```
 
-3.  **Build:**
-    *   Using Maven: `mvn clean install`
-    *   Using Gradle: `./gradlew build`
+The app is at http://localhost:8090. Log in with the admin account from `.env`, then
+`POST /api/world/connect` to attach to the simulator.
 
-4.  **Run:**
-    *   Using Maven: `mvn spring-boot:run`
-    *   Using Gradle: `./gradlew bootRun`
-    *   Alternatively, run the generated JAR file: `java -jar target/MiniAmazon-*.jar`
+`.env` is git-ignored. There are no default passwords and no default JWT key: the app refuses to
+start without them, and no admin account is created unless `APP_ADMIN_PASSWORD` is set.
 
-The application will start, typically on port 8080. JPA/Hibernate (`spring.jpa.hibernate.ddl-auto=create`) will create the necessary database tables on the first run based on the entity definitions. An admin user (`admin`/`admin`) will be created automatically if one doesn't exist.
+To run the app from an IDE against the Compose database, export the same variables
+(`SPRING_DATASOURCE_USERNAME`, `SPRING_DATASOURCE_PASSWORD`, `APP_JWT_SECRET`, ...) and run
+`./gradlew bootRun`.
+
+The world simulator is a closed-source x86-64 binary; on Apple Silicon it runs emulated.
+`WORLD_FLAKINESS` (0-99) sets how often it drops a message.
+
+## Tests
+
+```bash
+./gradlew test
+```
+
+The tests start a real PostgreSQL with Testcontainers, so Docker must be running. They cover the
+customer journey over HTTP and what happens under concurrency:
+
+*   60 buyers racing for 20 units: exactly 20 succeed, stock ends at 0.
+*   Orders that lock the same products in opposite order never deadlock.
+*   An order short on one line reserves nothing.
+*   A payment submitted 8 times is accepted once; a cancel racing a payment has one winner.
+*   Admin price edits and restocks during purchases never erase a stock movement.
+
+## Database schema
+
+The schema lives in `src/main/resources/db/migration` and changes only through new Flyway
+migrations. Hibernate runs with `ddl-auto=validate`: it checks the entities against the schema
+and never alters it.
 
 ## API Specifications for Frontend Development
 
@@ -237,9 +254,8 @@ This section details the exact API endpoints and data formats for frontend integ
 
 These endpoints are only accessible to users with `ROLE_ADMIN`.
 
-#### Admin Login(this admin is created on each startup)
-admin username: `admin`
-admin password: `admin`
+#### Admin Login
+The admin account is created at first startup from `APP_ADMIN_USERNAME` / `APP_ADMIN_PASSWORD`.
 
 #### Connect to World
 
@@ -419,9 +435,5 @@ admin password: `admin`
 
 ## Configuration
 
-Key configuration settings are in `src/main/resources/application.properties`:
-
-*   `spring.datasource.*`: Database connection details.
-*   `spring.jpa.*`: JPA/Hibernate settings (e.g., `ddl-auto`, dialect).
-*   `app.jwt.secret`: Secret key for signing JWTs.
-*   `app.jwt.expiration`: JWT expiration time in milliseconds. 
+All settings are in `src/main/resources/application.properties` and read their values from
+environment variables; see `.env.example` for the full list.

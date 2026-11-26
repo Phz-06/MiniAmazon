@@ -124,11 +124,9 @@ public class ProductService {
             throw new IllegalArgumentException("Product with ID " + productID + " not found");
         }
 
-        // Update the quantity
+        productRepository.setProductQuantity(productID, quantity);
         product.setQuantity(quantity);
-
-        // Save and return the updated product
-        return productRepository.save(product);
+        return product;
     }
 
     /**
@@ -177,13 +175,13 @@ public class ProductService {
             product.setCategory("General"); // Default category
             product.setWareHouse(warehouse);
         } else {
-            // Update existing product
-            log.info("Updating existing product {} from {} to {}", 
-                    productStrId, product.getQuantity(), product.getQuantity() + count);
-            product.setQuantity(product.getQuantity() + count);
+            // Existing product: add to whatever is there now, in one statement.
+            // Reading the quantity and saving it back would erase any purchase
+            // that landed in between.
+            productRepository.increaseProductQuantity(productStrId, count);
+            return;
         }
-        
-        // Save the product
+
         productRepository.save(product);
     }
 

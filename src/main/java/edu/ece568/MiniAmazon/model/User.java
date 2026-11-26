@@ -27,7 +27,8 @@ public class User extends AbstractPersistable<Long> {
     @Column(nullable = false)
     private boolean accountEnabled;
 
-    @Enumerated
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
     private UserRole role;
 
     private LocalDateTime createdAt;

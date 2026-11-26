@@ -3,7 +3,6 @@ package edu.ece568.MiniAmazon.Listener;
 import edu.ece568.MiniAmazon.Event.CancelOrderEvent;
 import edu.ece568.MiniAmazon.Event.ConfirmOrderEvent;
 import edu.ece568.MiniAmazon.Event.CreateOrderEvent;
-import edu.ece568.MiniAmazon.Event.DomainEvent;
 import edu.ece568.MiniAmazon.model.Order;
 import edu.ece568.MiniAmazon.service.OrderService;
 import lombok.extern.slf4j.Slf4j;
@@ -28,20 +27,15 @@ public class OrderEventListener {
 
     }
 
-    @Transactional
+    // These listeners run synchronously on the request thread, so a failure
+    // (out of stock, wrong state) propagates to the controller and becomes a
+    // 409 instead of a 202 for something that never happened.
     @EventListener
-    public DomainEvent handleConfirmOrderEvent(ConfirmOrderEvent event) {
-        try {
-            log.info("Received ConfirmOrderEvent: {} - {}", event.getEventId(), event.getOrderId());
-            orderService.confirmOrder(event.getOrderId(), event.getX(), event.getY());
-            return null;
-        } catch (Exception e) {
-            log.error("Error confirming order: {} - {}", event.getOrderId(), e.getMessage());
-            return new CancelOrderEvent(event.getOrderId());
-        }
+    public void handleConfirmOrderEvent(ConfirmOrderEvent event) {
+        log.info("Received ConfirmOrderEvent: {} - {}", event.getEventId(), event.getOrderId());
+        orderService.confirmOrder(event.getOrderId(), event.getX(), event.getY());
     }
 
-    @Transactional
     @EventListener
     public void handleCancelOrderEvent(CancelOrderEvent event) {
         log.info("Received CancelOrderEvent: {} - {}", event.getEventId(), event.getOrderId());

@@ -31,7 +31,7 @@ public class Order extends AbstractPersistable<Long> {
     private String shipmentId;
 
     @Column(name = "truck_id")
-    private int truckId;
+    private Integer truckId;
 
     @Enumerated(EnumType.STRING)
     private Status status;  // e.g., CREATED, PACKING, PACKED, LOADING, LOADED, DELIVERING, DELIVERED

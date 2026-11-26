@@ -21,7 +21,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.HashMap;
 import java.util.Map;
 
-import static org.springframework.data.repository.util.ClassUtils.ifPresent;
 
 /**
  * Service to process responses from the World Simulator

@@ -12,7 +12,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Service;
 
-import java.nio.file.AccessDeniedException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -37,11 +36,11 @@ public class PaymentEventListener {
     }
 
     @EventListener
-    public void handlePaymentEvent(ProcessPaymentEvent event) throws AccessDeniedException {
+    public void handlePaymentEvent(ProcessPaymentEvent event) {
         log.info("Received PaymentEvent: {} - {}$", event.getOrderId(), event.getAmount());
         
         // Process the payment
-        paymentService.processPayment(event.getOrderId());
+        paymentService.processPayment(event.getOrderId(), event.getAmount());
         log.info("Payment processed for order id {}", event.getOrderId());
         
         // Get the order details

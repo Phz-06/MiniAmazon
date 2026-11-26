@@ -1,4 +1,4 @@
 #!/bin/bash
-
-sudo docker-compose down --volumes --remove-orphans
-sudo docker-compose up -d --build --force-recreate
+# Rebuild images and start from an EMPTY database (the data volume is deleted).
+docker compose down --volumes --remove-orphans
+docker compose up -d --build --force-recreate
